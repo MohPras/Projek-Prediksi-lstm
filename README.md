@@ -190,9 +190,7 @@ Pada tahap evaluasi, kami menggunakan beberapa metrik untuk mengukur kinerja mod
 1. **Mean Absolute Error (MAE)**
    MAE mengukur rata-rata dari selisih absolut antara nilai prediksi dan nilai aktual. Metrik ini sangat berguna untuk memahami seberapa besar rata-rata kesalahan prediksi model dalam unit yang sama dengan data asli (suhu air dalam derajat). Formula MAE adalah:
 
-   $$
-   \text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_{\text{prediksi}} - y_{\text{aktual}}|
-   $$
+   <img width="349" alt="image" src="https://github.com/user-attachments/assets/b0c26a3c-7bbb-4938-bfc9-3efcb8f161a9" />
 
    Dimana:
 
@@ -205,27 +203,21 @@ Pada tahap evaluasi, kami menggunakan beberapa metrik untuk mengukur kinerja mod
 2. **Mean Squared Error (MSE)**
    MSE mengukur rata-rata dari kuadrat selisih antara nilai prediksi dan nilai aktual. Metrik ini memberikan penalti yang lebih besar untuk kesalahan yang lebih besar, sehingga lebih sensitif terhadap outlier. Formula MSE adalah:
 
-   $$
-   \text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_{\text{prediksi}} - y_{\text{aktual}})^2
-   $$
+   <img width="304" alt="image" src="https://github.com/user-attachments/assets/a0a8fb22-2670-4463-8ff5-92ebc20fd44c" />
 
    **Interpretasi**: MSE yang lebih rendah menunjukkan bahwa model lebih akurat dan memiliki kesalahan prediksi yang lebih kecil.
 
 3. **Root Mean Squared Error (RMSE)**
    RMSE adalah akar kuadrat dari MSE. RMSE memberikan gambaran yang lebih jelas tentang seberapa besar kesalahan prediksi model dalam unit yang sama dengan data asli (suhu air dalam derajat). Formula RMSE adalah:
 
-   $$
-   \text{RMSE} = \sqrt{\text{MSE}}
-   $$
+   <img width="212" alt="image" src="https://github.com/user-attachments/assets/22ba4a4d-26c7-49cf-92e6-4fb9f3be52a6" />
 
    **Interpretasi**: RMSE yang lebih rendah menunjukkan model yang lebih baik, karena RMSE memperhitungkan kesalahan besar dengan cara yang lebih kuat daripada MAE.
 
 4. **R-squared (R²)**
    R² adalah ukuran yang menunjukkan seberapa baik model menjelaskan variasi dalam data. R² dihitung dengan membandingkan varians dari prediksi model dengan varians dari data asli. Formula R² adalah:
 
-   $$
-   R^2 = 1 - \frac{\sum_{i=1}^{n} (y_{\text{aktual}} - y_{\text{prediksi}})^2}{\sum_{i=1}^{n} (y_{\text{aktual}} - \bar{y})^2}
-   $$
+   <img width="335" alt="image" src="https://github.com/user-attachments/assets/09d29e0d-75f5-4f50-a985-6e793f32f770" />
 
    Dimana $\bar{y}$ adalah nilai rata-rata dari data aktual.
 
