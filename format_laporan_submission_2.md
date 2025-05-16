@@ -1,8 +1,15 @@
 # Laporan Proyek Machine Learning System Recomendation Music Spotify - Mohammad Nurdin Prastya Hermansah
 
 ## Project Overview
+<div align="center">
 
-![image](https://github.com/user-attachments/assets/1631de35-9008-447e-b0f1-71ba4e7e41d1)
+<img src="https://github.com/user-attachments/assets/1631de35-9008-447e-b0f1-71ba4e7e41d1" alt="Gambar 1: Alur Proyek Sistem Rekomendasi" width="500"/>
+
+<br/>
+
+<strong>Gambar 1.</strong> Alur Proyek Sistem Rekomendasi
+
+</div>
 
 Dalam era digital saat ini, platform streaming musik seperti Spotify menghadapi tantangan untuk menyajikan pengalaman yang personal dan relevan bagi setiap penggunanya. Dengan jutaan lagu yang tersedia, pengguna dapat merasa kewalahan dalam memilih musik yang sesuai dengan selera mereka. Oleh karena itu, sistem rekomendasi berbasisi content base filter ini menjadi fitur krusial yang membantu pengguna menemukan musik baru yang kemungkinan besar akan mereka sukai.
 
