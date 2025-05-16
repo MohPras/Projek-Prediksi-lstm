@@ -51,20 +51,15 @@ Dalam proyek ini, pendekatan Content-Based Filtering dipilih dan diimplementasik
 
 ## Data Understanding
 Sumber dataset yang digunakan dalam proyek ini berasal dari repositori publik milik TidyTuesday, Untuk melihat atau menggunakan daatset ini silahkan kunjungi link ini ( https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-01-21/spotify_songs.csv ) atau bisa juga langsung copy dan gunakan pada proyek dengan kode seperti dibawah ini.
-
-<div align="center">
-<img width="947" alt="Kode program untuk mengakses dataset" src="https://github.com/user-attachments/assets/2ed8551b-c83f-4824-9c84-3ac5f77df1e0" />
-<br/>
-<strong>Gambar 3.</strong> Kode program untuk mengakses dataset
-</div>
-
+```
+# dwonload data
+url = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv"
+data = pd.read_csv(url)
+```
 Dataset ini berisi data lagu-lagu dari Spotify Top 2000 berdasarkan tangga lagu Spotify Charts dari tahun 2017 hingga 2019, dengan informasi berbagai fitur audio yang diperoleh melalui Spotify Web API.
-
 Informasi Umum Dataset
-Jumlah baris (lagu): 32.833 lagu
-
-Jumlah kolom (fitur): 23 fitur
-
+1. Jumlah baris (lagu): 32.833 lagu
+2. Jumlah kolom (fitur): 23 fitur
 Dataset ini sudah cukup bersih dan tidak memiliki banyak nilai kosong. Namun, tetap dilakukan pemeriksaan dan eksplorasi untuk memastikan kualitas data.
 
 **Rubrik/Kriteria Tambahan (Opsional)**:
