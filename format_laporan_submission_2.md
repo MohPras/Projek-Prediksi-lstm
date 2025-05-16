@@ -2,24 +2,28 @@
 
 ## Project Overview
 
+![image](https://github.com/user-attachments/assets/1631de35-9008-447e-b0f1-71ba4e7e41d1)
+
 Dalam era digital saat ini, platform streaming musik seperti Spotify menghadapi tantangan untuk menyajikan pengalaman yang personal dan relevan bagi setiap penggunanya. Dengan jutaan lagu yang tersedia, pengguna dapat merasa kewalahan dalam memilih musik yang sesuai dengan selera mereka. Oleh karena itu, sistem rekomendasi berbasisi content base filter ini menjadi fitur krusial yang membantu pengguna menemukan musik baru yang kemungkinan besar akan mereka sukai.
 
 Proyek ini bertujuan untuk membangun sistem rekomendasi musik berbasis konten (Content-Based Filtering) yang dapat merekomendasikan lagu-lagu serupa berdasarkan fitur-fitur audio seperti energi, valensi, danceability, dan tempo. Sistem ini berfokus pada karakteristik intrinsik dari lagu itu sendiri, bukan pada interaksi antar pengguna. Pendekatan ini relevan khususnya dalam situasi cold-start, di mana data interaksi pengguna belum tersedia atau masih terbatas.
 
 Sistem rekomendasi memiliki peran penting dalam meningkatkan user engagement dan retensi pengguna di platform digital. Berdasarkan laporan dari McKinsey, sistem rekomendasi yang efektif dapat meningkatkan penjualan hingga 20% dan meningkatkan kepuasan pelanggan melalui pengalaman yang lebih personal. Spotify sendiri menggunakan kombinasi sistem rekomendasi, termasuk collaborative filtering dan content-based filtering, untuk menghasilkan fitur seperti Discover Weekly dan Daily Mix. Dengan mengembangkan sistem rekomendasi berbasis konten menggunakan data publik dari Spotify, proyek ini tidak hanya melatih kemampuan teknis dalam analisis data dan machine learning, tetapi juga memberikan pemahaman praktis mengenai cara kerja sistem rekomendasi dalam industri teknologi saat ini.
 
+<img width="821" alt="image" src="https://github.com/user-attachments/assets/0807bf47-eb7f-4145-918b-a8581b53cbdf" />
+
+Proses dimulai dari Business Understanding, yaitu tahapan memahami masalah bisnis dan kemudian mrancang solusi analitik berdasarkan data untuk menyelesaikan permasalahan tersebut. Tahapan yang dijelaskan pada tahapan ini meliputi problem statement, goals, dan solution approach. Setelah memahami masalah dan menentukan solusinya, tahapan berlanjut pada Data Understanding dengan melihat infromasi data dan menentukan kualitasnya. Pemahaman data sangat penting untuk menghindari masalah yang tidak terduga pada fase berikutnya, yaitu Data Preparation. Data preparation di proyek ini adalah melakukan cleaning data yang hilang dan meng-encode data sehingga dapat diproses model, lalu pada akhirnya membagi data menjadi training dan test sebelum melakukan pemodelan. Pada tahap pemodelan dan evaluasi, dilakukan proses trainng dan melihat ukuran performa dari model untuk menentukan apakah model tersebut baik atau kurang.
+
+----------------------------------------------------
+
 ## Business Understanding
 
-Pada bagian ini, Anda perlu menjelaskan proses klarifikasi masalah.
-
-Bagian laporan ini mencakup:
-
 ### Problem Statements
+Dalam ekosistem platform streaming musik seperti Spotify, pengguna seringkali mengalami kesulitan dalam menemukan lagu baru yang sesuai dengan selera mereka. Dengan jumlah lagu yang sangat besar dan beragam, pengguna membutuhkan sistem yang mampu menyaring dan merekomendasikan konten musik secara personal. Tanpa sistem rekomendasi yang efektif, pengalaman pengguna akan menjadi kurang optimal, yang pada akhirnya dapat berdampak pada retensi pengguna.
 
-Menjelaskan pernyataan masalah:
-- Pernyataan Masalah 1
-- Pernyataan Masalah 2
-- Pernyataan Masalah n
+Masalah utama yang ingin diselesaikan dalam proyek ini adalah:
+1. Bagaimana membangun sistem yang mampu merekomendasikan lagu-lagu yang relevan bagi pengguna berdasarkan lagu yang mereka sukai?
+2. Bagaimana mengukur seberapa baik sistem rekomendasi yang dibangun dalam menyajikan hasil yang relevan dan akurat?
 
 ### Goals
 
