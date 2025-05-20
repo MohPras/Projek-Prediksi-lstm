@@ -1,4 +1,10 @@
-# Laporan Proyek Machine Learning - Nama Anda
+# Laporan Proyek Machine Learning Prediksi Suhu Air Sungai Dengan Algoritma LSTM Unvariant dan Multivariant Single Forcasting - Mohammad Nurdin Prastya Hermansah
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/84becbde-88f0-4379-aa51-95d6fb6fc6e7" alt="" width="800"/>
+<br/>
+<strong>Gambar 1.</strong> Manfaat Air Untuk kehidupan
+</div>
 
 ## Domain Proyek: Prediksi Suhu Air Menggunakan LSTM Unvariant dan Multivariat
 
@@ -110,8 +116,84 @@ Dataset yang digunakan berisi 2371 baris dan 7 kolom yang merepresentasikan kual
 - Water Temp (°C): Suhu air
 - Air Temp (°C): Suhu udara
 
-**Rubrik/Kriteria Tambahan (Opsional)**:
-- Melakukan beberapa tahapan yang diperlukan untuk memahami data, contohnya teknik visualisasi data atau exploratory data analysis.
+### Eksplorasi Data & Visualisasi Data
+
+Beberapa langkah Exploratory Data Analysis (EDA) telah dilakukan untuk memahami distribusi serta hubungan antar fitur dalam dataset. Di bawah ini merupakan ringkasan dari beberapa tahapan EDA yang telah dilakukan. 
+
+#### Data Wrangling
+1. Dwonload Data
+  Gunakan kode dibawah ini untuk dwonload dataset dari kagel dengan kagel API.
+   ```
+      # Upload file kaggel api
+      from google.colab import files
+      files.upload()
+         
+      # set konfigurasi dan dwonload set
+      !mkdir -p ~/.kaggle
+      !cp kaggle.json ~/.kaggle/
+      !chmod 600 ~/.kaggle/kaggle.json
+         
+      # dwonload data
+      !kaggle datasets download -d supriyoain/water-quality-data
+         
+      # ekstrak data
+      !unzip water-quality-data.zip
+  ```
+2. Data Akuisisi
+   Gunakan kode dibawah ini untuk akuisi data dengan pandas.
+  ```
+      # ambil data
+      data = pd.read_csv("waterquality.csv")
+      # Baca dataset dari CSV
+      data.head()
+   ```
+3. Data Asesing
+   Gunakan kode dibawah ini untuk cek data apakah ada missing value dan dupicated data.
+   ```
+      # cek info data
+      data.info()
+      
+      # cek missing value
+      data.isna().sum()
+      
+      # cek duplikasi data
+      print('duplikasi data: ', data.duplicated().sum())
+   ```
+4. Data Cleaning
+Gunakan kode untuk cleaning data mising value dan juga konversi data dari object ke numerik atau tipe data yang lain. Metode menangnai missing value memakai interpolasi, Alasan penggunaan interpolasi, interpolasi bagus untuk mengatasi missing value pada data sensor time series karena dapat mengisi nilai yang hilang berdasarkan tren dan pola waktu di sekitar data tersebut, sehingga menjaga kontinuitas dan keaslian sinyal sensor tanpa mengaburkan variasi alami, berbeda dengan metode seperti mean atau median yang cenderung meratakan data dan menghilangkan dinamika waktu.
+    ```
+      # mengatasi missing value dengan interpolate
+      data['Salinity (ppt)'] = data['Salinity (ppt)'].interpolate(method='linear')
+      data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].interpolate(method='linear')
+      data['pH'] = data['pH'].interpolate(method='linear')
+      data['SecchiDepth (m)'] = data['SecchiDepth (m)'].interpolate(method='linear')
+      data['WaterDepth (m)'] = data['WaterDepth (m)'].interpolate(method='linear')
+      data['WaterTemp (C)'] = data['WaterTemp (C)'].interpolate(method='linear')
+      
+      # Fill forward/backward setelah interpolate karena masih ada missing value
+      data['Salinity (ppt)'] = data['Salinity (ppt)'].interpolate(method='linear')
+      data['Salinity (ppt)'] = data['Salinity (ppt)'].fillna(method='ffill').fillna(method='bfill')
+      
+      data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].interpolate(method='linear')
+      data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].fillna(method='ffill').fillna(method='bfill')
+
+      # mengatasi misiing value pada date
+      print(data['Date'].isna().sum())     # berapa banyak missing
+      print(data['Date'].head(10))          # contoh data awal
+      print(data[data['Date'].isna()])      # lihat baris yang missing Date
+      data['Date'] = data['Date'].fillna(method='ffill')
+    ```
+#### Exploratory Data Analisis
+
+Tahap eksplorasi data ini bertujuan untuk memahami struktur, karakteristik, serta pola yang terkandung dalam dataset sebelum dilakukan proses analisis lanjutan atau pemodelan. Dengan melakukan eksplorasi data, kita dapat mengidentifikasi berbagai hal penting seperti jumlah data, tipe data pada masing-masing kolom, nilai yang hilang, distribusi nilai, serta hubungan antar variabel. Proses ini juga membantu dalam menemukan potensi outlier, tren musiman, atau pola waktu tertentu yang dapat memengaruhi hasil analisis. Selain itu, eksplorasi data sangat penting untuk memastikan kualitas data yang digunakan sudah memadai dan sesuai dengan tujuan analisis, sehingga proses selanjutnya dapat dilakukan secara lebih akurat dan efisien. Beberapa langkah yang dilakukan meliputi:
+1. Menampilkan informasi dan jumlah data (*data info* dan *data shape*).
+2. Melakukan analisis statistik deskriptif terhadap data.
+3. Melihat distribusi masing-masing fitur.
+4. Mengubah kolom **Date** menjadi format `datetime` dan menetapkannya sebagai indeks.
+5. Membuat visualisasi tren data dalam bentuk *time series*.
+6. Menyusun dan menampilkan matriks korelasi antar variabel.
+7. Mengeksplorasi pola musiman atau pola harian/bulanan.
+8. Membuat visualisasi gabungan untuk menunjukkan distribusi dan korelasi antar fitur.
 
 ## Data Preparation
 Pada bagian ini Anda menerapkan dan menyebutkan teknik data preparation yang dilakukan. Teknik yang digunakan pada notebook dan laporan harus berurutan.
