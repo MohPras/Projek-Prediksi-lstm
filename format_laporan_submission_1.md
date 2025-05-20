@@ -304,19 +304,140 @@ plt.show()
 
 
 ## Data Preparation
-Pada bagian ini Anda menerapkan dan menyebutkan teknik data preparation yang dilakukan. Teknik yang digunakan pada notebook dan laporan harus berurutan.
+Tahap data preparation (persiapan data) merupakan proses penting dalam analisis data dan pemodelan, karena memastikan bahwa data dalam kondisi bersih, konsisten, dan siap digunakan untuk pelatihan model. Pada tahap ini, dilakukan beberapa langkah utama:
 
-**Rubrik/Kriteria Tambahan (Opsional)**: 
-- Menjelaskan proses data preparation yang dilakukan
-- Menjelaskan alasan mengapa diperlukan tahapan data preparation tersebut.
+1. Deteksi dan penanganan outlier
+2. Normalisasi fitur numerik
+   
+Kedua langkah ini bertujuan untuk meningkatkan kualitas data agar hasil analisis dan prediksi dari model lebih akurat dan tidak bias terhadap nilai ekstrem atau perbedaan skala antar variabel.
+
+### Cek outlier
+Langkah pertama adalah mengidentifikasi outlier menggunakan boxplot, yang secara visual memperlihatkan nilai-nilai ekstrem di luar rentang normal (di luar whisker dari boxplot). Ini dilakukan untuk setiap kolom numerik.
+```python
+# Pilih hanya kolom dengan tipe data numerik
+numeric_columns = data.select_dtypes(include=['number']).columns
+
+# Plot boxplot hanya untuk kolom numerik
+for feature in numeric_columns:
+    plt.figure(figsize=(10, 5))
+    plt.boxplot(x=data[feature])
+    plt.title(f"Box Plot Of {feature}")
+    plt.show()
+```
+
+<div align="center">
+<img width="776" alt="image" src="https://github.com/user-attachments/assets/b805d646-2876-4784-ad6c-d4239ba04277" />
+<br/>
+<strong>Gambar 2.</strong> Hasil Cek Outlier
+</div>
+
+### Tangani Outlier Metode IQR
+Setelah outlier terdeteksi, digunakan metode Interquartile Range (IQR) untuk menentukan batas bawah dan atas dari nilai normal. Outlier kemudian digantikan dengan nilai median dari kolom tersebut. Metode ini dipilih karena median tidak terpengaruh oleh nilai ekstrem dan mampu mempertahankan distribusi alami data.
+```pyhton
+# Tangani outlier
+
+# Pilih hanya kolom dengan tipe data numerik
+numeric_columns = data.select_dtypes(include=['number']).columns
+
+# Tangani outlier dengan mengganti dengan median atau mean
+for feature in numeric_columns:
+    Q1 = data[feature].quantile(0.25)
+    Q3 = data[feature].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Buat mask untuk outlier
+    outliers = (data[feature] < lower_bound) | (data[feature] > upper_bound)
+
+    # Ganti outlier dengan median (atau bisa ganti jadi df[feature].mean())
+    median_value = data[feature].median()
+    data.loc[outliers, feature] = median_value
+```
+<div align="center">
+<img width="786" alt="image" src="https://github.com/user-attachments/assets/ead1ae5d-0415-4c58-8635-c4cc88801f6f" />
+<br/>
+<strong>Gambar 3.</strong> Hasil Penanganan Outlier Dengan Median
+</div>
+
+### Normalisasi Data
+Setelah menangani outlier, dilakukan normalisasi data agar semua fitur numerik berada dalam skala yang seragam, umumnya antara 0 dan 1. Proses ini penting karena algoritma machine learning seperti KNN, SVM, atau Neural Networks sensitif terhadap perbedaan skala. Jika tidak dinormalisasi, fitur dengan rentang nilai besar akan mendominasi model dan menghasilkan prediksi yang bias.
+
+<div align="center">
+<img width="301" alt="image" src="https://github.com/user-attachments/assets/0e392499-4062-43ab-bd61-f74433d84294" />
+<br/>
+<strong>Gambar 4.</strong> Sebelum Normalisasi Data
+</div>
+
+```python
+from sklearn.preprocessing import MinMaxScaler
+
+# Inisialisasi MinMaxScaler
+scaler = MinMaxScaler()
+
+# Copy data asli
+data_scaled = data_filter.copy()
+
+# Pilih hanya kolom numerik
+numerical_cols = data_filter.select_dtypes(include=['number']).columns
+
+# Normalisasi kolom numerik
+data_scaled[numerical_cols] = scaler.fit_transform(data_filter[numerical_cols])
+
+# Tampilkan hasil
+data_scaled.describe()
+```
+
+<div align="center">
+<img width="305" alt="image" src="https://github.com/user-attachments/assets/7a542843-80f8-496a-b8ad-5dc20f159f6b" />
+<br/>
+<strong>Gambar 5.</strong> Setelah Normalisasi Data
+</div>
+
 
 ## Modeling
-Tahapan ini membahas mengenai model machine learning yang digunakan untuk menyelesaikan permasalahan. Anda perlu menjelaskan tahapan dan parameter yang digunakan pada proses pemodelan.
+Pada tahap *modeling*, saya menggunakan algoritma **Long Short-Term Memory (LSTM)** untuk memprediksi **suhu air (Water Temperature)** berdasarkan data deret waktu (*time series*). Pemilihan LSTM didasarkan pada kemampuannya dalam menangkap pola dan ketergantungan jangka panjang pada data berurutan, yang sangat sesuai untuk data sensor lingkungan.
 
-**Rubrik/Kriteria Tambahan (Opsional)**: 
-- Menjelaskan kelebihan dan kekurangan dari setiap algoritma yang digunakan.
-- Jika menggunakan satu algoritma pada solution statement, lakukan proses improvement terhadap model dengan hyperparameter tuning. **Jelaskan proses improvement yang dilakukan**.
-- Jika menggunakan dua atau lebih algoritma pada solution statement, maka pilih model terbaik sebagai solusi. **Jelaskan mengapa memilih model tersebut sebagai model terbaik**.
+### Pendekatan yang Digunakan
+
+Saya melakukan dua pendekatan dalam pemodelan:
+
+#### 1. **Univariate Single Forecasting**
+
+* Model ini hanya menggunakan **suhu air (Water Temp)** sebagai fitur input untuk memprediksi suhu air pada waktu berikutnya.
+* Tujuan pendekatan ini adalah melihat seberapa baik suhu masa lalu dapat memprediksi suhu masa depan tanpa bantuan variabel lain.
+
+#### 2. **Multivariate Single Forecasting**
+
+* Model ini menggunakan beberapa fitur sekaligus (misalnya: suhu udara, salinitas, DO, kedalaman, dll.) untuk memprediksi suhu air.
+* Pendekatan ini bertujuan menangkap pengaruh variabel lingkungan lain terhadap suhu air, sehingga prediksi menjadi lebih akurat.
+
+### Proses Tuning Hyperparameter
+
+Untuk kedua pendekatan, dilakukan proses **hyperparameter tuning** guna menemukan kombinasi parameter terbaik. Parameter yang dioptimalkan antara lain:
+
+* Jumlah neuron di hidden layer
+* Panjang *time window* (lag)
+* Jumlah *epochs* dan ukuran *batch*
+* Fungsi aktivasi, optimizer (misal Adam), dan dropout
+
+### Evaluasi Model
+
+Evaluasi dilakukan dengan dua metrik utama:
+
+* **R-squared (R²)**: Mengukur seberapa baik prediksi mengikuti variasi data aktual. Target minimal ditetapkan sebesar **50%**, namun hasilnya **jauh melampaui** target tersebut.
+* **Error (RMSE/MAE)**: Digunakan untuk mengukur rata-rata kesalahan prediksi.
+
+### Hasil Akhir
+
+* Kedua pendekatan (univariate dan multivariate) berhasil mencapai nilai **R² antara 85% hingga 86%**, menunjukkan bahwa model mampu menangkap pola dengan sangat baik.
+* Nilai error (MAE dan RMSE) juga **relatif kecil**, yang berarti deviasi antara nilai prediksi dan aktual rendah.
+
+> **Kesimpulan:**
+> Baik pendekatan univariate maupun multivariate sama-sama memberikan hasil yang sangat baik, namun pendekatan **multivariate memberikan keunggulan tambahan** karena mempertimbangkan hubungan antar fitur lingkungan.
+
+
+
 
 ## Evaluation
 Pada bagian ini anda perlu menyebutkan metrik evaluasi yang digunakan. Lalu anda perlu menjelaskan hasil proyek berdasarkan metrik evaluasi yang digunakan.
