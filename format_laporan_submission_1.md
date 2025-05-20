@@ -88,7 +88,7 @@ Pendekatan bertahap ini memungkinkan evaluasi menyeluruh, mulai dari baseline se
 ### Sumber Data
 Sumber dataset yang digunakan dalam proyek ini berasal dari Kaggle milik pengguna supriyoain dengan nama water_quality_data. Untuk melihat atau menggunakan dataset ini, silakan kunjungi tautan berikut: https://www.kaggle.com/datasets/supriyoain/water-quality-data.
 Anda dapat menggunakan dataset ini tanpa perlu mengunduhnya ke komputer/laptop secara langsung, dengan mengikuti petunjuk akses data secara langsung seperti yang dijelaskan di bawah ini.
-```
+```python
 # Upload file kaggel api
 from google.colab import files
 files.upload()
@@ -121,79 +121,187 @@ Dataset yang digunakan berisi 2371 baris dan 7 kolom yang merepresentasikan kual
 Beberapa langkah Exploratory Data Analysis (EDA) telah dilakukan untuk memahami distribusi serta hubungan antar fitur dalam dataset. Di bawah ini merupakan ringkasan dari beberapa tahapan EDA yang telah dilakukan. 
 
 #### Data Wrangling
-1. Dwonload Data
-  Gunakan kode dibawah ini untuk dwonload dataset dari kagel dengan kagel API.
-   ```
-      # Upload file kaggel api
-      from google.colab import files
-      files.upload()
-         
-      # set konfigurasi dan dwonload set
-      !mkdir -p ~/.kaggle
-      !cp kaggle.json ~/.kaggle/
-      !chmod 600 ~/.kaggle/kaggle.json
-         
-      # dwonload data
-      !kaggle datasets download -d supriyoain/water-quality-data
-         
-      # ekstrak data
-      !unzip water-quality-data.zip
-  ```
-2. Data Akuisisi
-   Gunakan kode dibawah ini untuk akuisi data dengan pandas.
-  ```
-      # ambil data
-      data = pd.read_csv("waterquality.csv")
-      # Baca dataset dari CSV
-      data.head()
-   ```
-3. Data Asesing
-   Gunakan kode dibawah ini untuk cek data apakah ada missing value dan dupicated data.
-   ```
-      # cek info data
-      data.info()
-      
-      # cek missing value
-      data.isna().sum()
-      
-      # cek duplikasi data
-      print('duplikasi data: ', data.duplicated().sum())
-   ```
-4. Data Cleaning
-Gunakan kode untuk cleaning data mising value dan juga konversi data dari object ke numerik atau tipe data yang lain. Metode menangnai missing value memakai interpolasi, Alasan penggunaan interpolasi, interpolasi bagus untuk mengatasi missing value pada data sensor time series karena dapat mengisi nilai yang hilang berdasarkan tren dan pola waktu di sekitar data tersebut, sehingga menjaga kontinuitas dan keaslian sinyal sensor tanpa mengaburkan variasi alami, berbeda dengan metode seperti mean atau median yang cenderung meratakan data dan menghilangkan dinamika waktu.
-    ```
-      # mengatasi missing value dengan interpolate
-      data['Salinity (ppt)'] = data['Salinity (ppt)'].interpolate(method='linear')
-      data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].interpolate(method='linear')
-      data['pH'] = data['pH'].interpolate(method='linear')
-      data['SecchiDepth (m)'] = data['SecchiDepth (m)'].interpolate(method='linear')
-      data['WaterDepth (m)'] = data['WaterDepth (m)'].interpolate(method='linear')
-      data['WaterTemp (C)'] = data['WaterTemp (C)'].interpolate(method='linear')
-      
-      # Fill forward/backward setelah interpolate karena masih ada missing value
-      data['Salinity (ppt)'] = data['Salinity (ppt)'].interpolate(method='linear')
-      data['Salinity (ppt)'] = data['Salinity (ppt)'].fillna(method='ffill').fillna(method='bfill')
-      
-      data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].interpolate(method='linear')
-      data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].fillna(method='ffill').fillna(method='bfill')
+##### 1. Download Data
+Gunakan kode di bawah ini untuk download dataset dari Kaggle dengan Kaggle API.
 
-      # mengatasi misiing value pada date
-      print(data['Date'].isna().sum())     # berapa banyak missing
-      print(data['Date'].head(10))          # contoh data awal
-      print(data[data['Date'].isna()])      # lihat baris yang missing Date
-      data['Date'] = data['Date'].fillna(method='ffill')
-    ```
+```python
+# Upload file kaggle api
+from google.colab import files
+files.upload()
+    
+# Set konfigurasi dan download set
+!mkdir -p ~/.kaggle
+!cp kaggle.json ~/.kaggle/
+!chmod 600 ~/.kaggle/kaggle.json
+    
+# Download data
+!kaggle datasets download -d supriyoain/water-quality-data
+    
+# Ekstrak data
+!unzip water-quality-data.zip
+```
+
+---
+
+##### 2. Data Akuisisi
+Gunakan kode di bawah ini untuk akuisisi data dengan pandas.
+
+```python
+# Ambil data
+import pandas as pd
+data = pd.read_csv("waterquality.csv")
+
+# Baca dataset
+data.head()
+```
+
+---
+
+##### 3. Data Assessing
+Gunakan kode di bawah ini untuk cek data apakah ada missing value dan duplicated data.
+
+```python
+# Cek info data
+data.info()
+
+# Cek missing value
+data.isna().sum()
+
+# Cek duplikasi data
+print('duplikasi data: ', data.duplicated().sum())
+```
+
+---
+
+##### 4. Data Cleaning
+Gunakan kode untuk cleaning data missing value dan juga konversi data. Metode interpolasi dipilih karena cocok untuk time series data sensor.
+
+```python
+# Mengatasi missing value dengan interpolate
+data['Salinity (ppt)'] = data['Salinity (ppt)'].interpolate(method='linear')
+data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].interpolate(method='linear')
+data['pH'] = data['pH'].interpolate(method='linear')
+data['SecchiDepth (m)'] = data['SecchiDepth (m)'].interpolate(method='linear')
+data['WaterDepth (m)'] = data['WaterDepth (m)'].interpolate(method='linear')
+data['WaterTemp (C)'] = data['WaterTemp (C)'].interpolate(method='linear')
+
+# Fill forward/backward setelah interpolate
+data['Salinity (ppt)'] = data['Salinity (ppt)'].fillna(method='ffill').fillna(method='bfill')
+data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].fillna(method='ffill').fillna(method='bfill')
+
+# Mengatasi missing value pada kolom Date
+print(data['Date'].isna().sum())     # berapa banyak missing
+print(data['Date'].head(10))         # contoh data awal
+print(data[data['Date'].isna()])     # lihat baris yang missing Date
+
+data['Date'] = data['Date'].fillna(method='ffill')
+```
+
+
 #### Exploratory Data Analisis
 
 Tahap eksplorasi data ini bertujuan untuk memahami struktur, karakteristik, serta pola yang terkandung dalam dataset sebelum dilakukan proses analisis lanjutan atau pemodelan. Dengan melakukan eksplorasi data, kita dapat mengidentifikasi berbagai hal penting seperti jumlah data, tipe data pada masing-masing kolom, nilai yang hilang, distribusi nilai, serta hubungan antar variabel. Proses ini juga membantu dalam menemukan potensi outlier, tren musiman, atau pola waktu tertentu yang dapat memengaruhi hasil analisis. Selain itu, eksplorasi data sangat penting untuk memastikan kualitas data yang digunakan sudah memadai dan sesuai dengan tujuan analisis, sehingga proses selanjutnya dapat dilakukan secara lebih akurat dan efisien. Beberapa langkah yang dilakukan meliputi:
-1. Menampilkan informasi dan jumlah data (*data info* dan *data shape*).
-2. Melakukan analisis statistik deskriptif terhadap data.
-3. Melihat distribusi masing-masing fitur.
-4. Mengubah kolom **Date** menjadi format `datetime` dan menetapkannya sebagai indeks.
-5. Membuat visualisasi tren data dalam bentuk *time series*.
-6. Menyusun dan menampilkan matriks korelasi antar variabel.
-7. Mengeksplorasi pola musiman atau pola harian/bulanan.
-8. Membuat visualisasi gabungan untuk menunjukkan distribusi dan korelasi antar fitur.
+##### 1. Menampilkan Informasi Umum Dataset  
+Proses ini digunakan untuk memahami struktur dataset, jumlah baris, tipe data tiap kolom, dan statistik dasar seperti rata-rata, nilai maksimum, minimum, dll.
+
+```python
+# Jumlah data
+print(len(data))
+
+# Cek info data
+data.info()
+
+# Deskripsi statistik
+data.describe()
+```
+
+---
+
+##### 2. Menampilkan Histogram Distribusi Data  
+Digunakan untuk melihat distribusi nilai dari setiap fitur numerik dalam dataset. Membantu memahami apakah data normal, skewed, atau memiliki outlier.
+
+```python
+# Menampilkan histogram distribusi data untuk semua kolom numerik
+data.select_dtypes(include='number').hist(figsize=(12, 8), bins=30, edgecolor='black')
+```
+
+---
+
+##### 3. Mengubah Kolom Date Menjadi Tipe Datetime dan Mengatur sebagai Index  
+Langkah ini penting untuk analisis time series. Dengan menjadikan kolom `Date` sebagai indeks, kita bisa melakukan resampling dan visualisasi berdasarkan waktu.
+
+```python
+# Ubah Kolom Date jadi datetime dan set sebagai index
+data['Date'] = pd.to_datetime(data['Date'])
+data.set_index('Date', inplace=True)
+data = data.sort_index()  # pastikan urut waktu
+```
+
+---
+
+##### 4. Menampilkan Plot Tren Time Series  
+Visualisasi seluruh parameter sensor terhadap waktu. Membantu mengamati pola umum, tren, atau anomali dalam data seiring waktu.
+
+```python
+# Plot tren waktu time series
+import matplotlib.pyplot as plt
+
+data.plot(subplots=True, figsize=(12, 10), title='Time Series of Sensor Data')
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+##### 5. Membuat Matriks Korelasi antar Variabel  
+Digunakan untuk mengukur hubungan antar fitur numerik, apakah dua fitur memiliki korelasi positif, negatif, atau tidak berkorelasi.
+
+```python
+# Matriks korelasi variabel
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8,6))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Matrix")
+plt.show()
+```
+
+---
+
+##### 6. Menampilkan Pola Musiman (Bulanan)  
+Dengan resampling bulanan, kita bisa melihat apakah terdapat pola musiman atau tren jangka panjang dalam data, seperti kenaikan suhu di musim panas.
+
+```python
+# Musiman atau Pola Harian/Bulanan
+data_monthly = data.resample('M').mean()
+data_monthly.plot(figsize=(12, 6), title='Monthly Average of Parameters')
+plt.show()
+```
+
+---
+
+##### 7. Visualisasi Gabungan Distribusi dan Korelasi (Pairplot)  
+`pairplot` membantu melihat hubungan dan sebaran antar semua kombinasi fitur numerik. Ini sangat berguna untuk eksplorasi awal data.
+
+```python
+# Visualisasi gabungan distribusi dan korelasi
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.pairplot(data.sample(500))  # sampling untuk mempercepat plotting
+plt.show()
+```
+
+##### Kesimpulan EDA
+
+| Aspek               | Intisari Utama                                                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Distribusi Data** | Kebanyakan variabel (Salinity, Secchi Depth, Water Depth, pH) miring ke kanan, data terkonsentrasi di nilai rendah (air tawar, dangkal, air keruh, pH netral). Water Temp bimodal, Air Temp miring kanan.                 |
+| **Pola Waktu**      | Pola musiman kuat pada suhu air & udara, serta Dissolved Oxygen yang berfluktuasi mengikuti suhu. Variabel lain relatif stabil, ada celah data dan outlier (pH rendah, suhu ekstrem).                                     |
+| **Korelasi**        | Secchi Depth & Water Depth sangat kuat positif (r=0.81). Water Temp & Air Temp positif (r=0.68). Dissolved Oxygen negatif signifikan terhadap Water Temp (r=-0.54) dan Air Temp (r=-0.34). Variabel lain korelasi rendah. |
+| **Catatan Penting** | Data outlier pada pH dan suhu perlu dicek ulang. Banyak data menggambarkan kondisi lingkungan dangkal, keruh, dan salinitas rendah dengan pengaruh kuat musim terhadap suhu dan oksigen.                                  |
+
 
 ## Data Preparation
 Pada bagian ini Anda menerapkan dan menyebutkan teknik data preparation yang dilakukan. Teknik yang digunakan pada notebook dan laporan harus berurutan.
