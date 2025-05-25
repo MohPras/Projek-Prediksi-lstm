@@ -415,12 +415,14 @@ plt.show()
 
 ##### Kesimpulan EDA
 
-| Aspek               | Intisari Utama                                                                                                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Distribusi Data** | Kebanyakan variabel (Salinity, Secchi Depth, Water Depth, pH) miring ke kanan, data terkonsentrasi di nilai rendah (air tawar, dangkal, air keruh, pH netral). Water Temp bimodal, Air Temp miring kanan.                 |
-| **Pola Waktu**      | Pola musiman kuat pada suhu air & udara, serta Dissolved Oxygen yang berfluktuasi mengikuti suhu. Variabel lain relatif stabil, ada celah data dan outlier (pH rendah, suhu ekstrem).                                     |
-| **Korelasi**        | Secchi Depth & Water Depth sangat kuat positif (r=0.81). Water Temp & Air Temp positif (r=0.68). Dissolved Oxygen negatif signifikan terhadap Water Temp (r=-0.54) dan Air Temp (r=-0.34). Variabel lain korelasi rendah. |
-| **Catatan Penting** | Data outlier pada pH dan suhu perlu dicek ulang. Banyak data menggambarkan kondisi lingkungan dangkal, keruh, dan salinitas rendah dengan pengaruh kuat musim terhadap suhu dan oksigen.                                  |
+| Aspek Analisa         | Penjelasan Lengkap                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Distribusi Data**   | Banyak parameter utama seperti Salinity, SecchiDepth, dan WaterDepth menunjukkan distribusi data yang sangat miring ke kanan. Hal ini berarti sebagian besar nilai berada pada rentang rendah, sementara nilai tinggi hanya muncul dalam frekuensi yang jauh lebih kecil. Kondisi ini mengindikasikan dominasi nilai rendah pada kondisi lingkungan yang diukur, seperti salinitas yang cenderung dekat air tawar, kedalaman air yang relatif dangkal, dan kejernihan air yang umumnya terbatas. Distribusi seperti ini penting untuk diperhatikan agar analisis statistik dan model yang digunakan bisa menyesuaikan dengan karakter data yang tidak simetris. |
+| **Pola Musiman**      | Terjadi pola musiman yang jelas pada beberapa parameter kunci, terutama suhu air, suhu udara, dan kadar oksigen terlarut. Pola ini mengindikasikan adanya fluktuasi reguler sepanjang tahun, yang biasanya dipengaruhi oleh siklus iklim dan perubahan musim. Misalnya, suhu udara dan air naik pada musim panas dan turun pada musim dingin, sementara oksigen terlarut cenderung berbanding terbalik dengan suhu, mengalami penurunan saat suhu naik karena kelarutan oksigen menurun. Pola musiman ini memberikan wawasan penting tentang dinamika lingkungan dan dapat menjadi dasar untuk prediksi dan manajemen sumber daya air.                          |
+| **Korelasi Positif**  | Ditemukan korelasi positif yang kuat antara kedalaman air dengan kejernihan (SecchiDepth), yang menunjukkan bahwa semakin dalam air, biasanya semakin jernih karena sedimen dan partikel tersuspensi cenderung lebih sedikit tersebar di lapisan permukaan. Selain itu, suhu air juga sangat berkorelasi positif dengan suhu udara di sekitarnya, menandakan bahwa kondisi atmosfer langsung memengaruhi suhu perairan, terutama di ekosistem dangkal. Korelasi positif ini menegaskan keterkaitan erat antara parameter fisik lingkungan dan memberikan dasar untuk memahami interaksi antar elemen ekosistem.                                                 |
+| **Korelasi Negatif**  | Terdapat korelasi negatif yang kuat antara kadar oksigen terlarut dengan suhu air dan suhu udara, yang mengindikasikan bahwa kenaikan suhu menyebabkan penurunan kadar oksigen dalam air. Fenomena ini umum terjadi karena kelarutan oksigen menurun pada suhu yang lebih tinggi. Kondisi ini berimplikasi pada kesehatan ekosistem akuatik, karena oksigen terlarut yang rendah dapat membatasi keberlangsungan hidup organisme air, terutama ikan dan biota sensitif lainnya. Pemahaman hubungan ini penting untuk pengelolaan kualitas air dan mitigasi dampak perubahan iklim.                                                                              |
+| **Parameter Lainnya** | Parameter lain selain yang telah disebutkan umumnya menunjukkan korelasi yang lemah atau hampir independen satu sama lain. Hal ini menandakan adanya pengaruh faktor lingkungan atau biotik lain yang belum diukur dalam data saat ini, seperti arus air, aktivitas manusia, atau perubahan kimiawi lainnya. Ketidakterkaitan ini juga membuka peluang untuk pengkajian lebih mendalam guna mengidentifikasi variabel tambahan yang dapat memperkaya model pemantauan dan prediksi kondisi lingkungan.                                                                                                                                                          |
+
 
 
 ## Data Preparation
@@ -746,6 +748,26 @@ history = model.fit(
 <strong>Gambar 7.</strong> Ploting Aktual Vs Prediksi
 </div>
 
+<div align="center">
+
+### Comparison of Actual and Predicted Water Temperature
+
+| Index | Actual Water Temperature (°C) | Predicted Water Temperature (°C) |
+|:-----:|:-----------------------------:|:--------------------------------:|
+|   0   |             23.0              |             22.884               |
+|   1   |             24.0              |             23.339               |
+|   2   |             23.0              |             23.836               |
+|   3   |             23.0              |             23.410               |
+|   4   |             19.0              |             22.773               |
+|   5   |             18.0              |             20.130               |
+|   6   |             24.0              |             18.788               |
+|   7   |             23.0              |             21.048               |
+|   8   |             28.0              |             22.161               |
+|   9   |             25.0              |             25.484               |
+
+</div>
+
+
 **Kesimpulan Visualisasi:**
 
 * Model memiliki **kemampuan yang baik dalam mengikuti pola tren** dari suhu air.
@@ -776,15 +798,9 @@ print(f"RMSE : {rmse:.4f}")
 print(f"MAE  : {mae:.4f}")
 print(f"R²   : {r2:.2f}")
 ```
-```python
-23/23 ━━━━━━━━━━━━━━━━━━━━ 1s 16ms/step
 
-📊 Evaluasi Akhir:
-MSE  : 0.0048
-RMSE : 0.0694
-MAE  : 0.0475
-R²   : 0.85
-```
+Model prediksi suhu air menunjukkan performa yang baik dengan nilai koefisien determinasi (R²) sebesar 0.85, yang mengindikasikan bahwa model mampu menjelaskan sekitar 85% variasi dalam data suhu air aktual. Hal ini menandakan model memiliki kemampuan prediksi yang kuat dan relevan terhadap pola data yang ada. Selain itu, metrik evaluasi kesalahan seperti MSE, RMSE, dan MAE menunjukkan nilai yang kecil, yang mencerminkan tingkat kesalahan prediksi yang rendah dan konsistensi hasil yang tinggi. Dengan demikian, model ini dapat diandalkan untuk memprediksi suhu air secara akurat dalam konteks penelitian atau aplikasi terkait.
+
 ```python
 # ========== Plot Loss Training & Validation ==========
 plt.figure(figsize=(10, 5))
@@ -800,10 +816,11 @@ plt.show()
 ```
 
 <div align="center">
-<img width="908" alt="image" src="https://github.com/user-attachments/assets/d9b21cbd-e3a6-4fe1-98db-ab457fa17516" />
+<img width="898" alt="image" src="https://github.com/user-attachments/assets/b7dad999-399d-4a38-a003-fe6267fdbae1" />
 <br/>
 <strong>Gambar 8.</strong> Ploting Training & Validation Loss over Epochs
 </div>
+
 
 **Kesimpulan Evaluasi**
 1. Nilai MSE dan RMSE yang relatif kecil menunjukkan bahwa rata-rata kesalahan prediksi yang dilakukan oleh model sangat rendah. Ini mengindikasikan bahwa perbedaan antara nilai aktual dan nilai prediksi tidak signifikan secara kuantitatif. Nilai MAE yang juga rendah memperkuat indikasi tersebut, dengan rata-rata kesalahan absolut yang kecil. Sementara itu, nilai R² sebesar 0.85 menunjukkan bahwa sekitar 85% variasi pada data target dapat dijelaskan oleh model. Ini merupakan indikasi bahwa model memiliki kemampuan prediktif yang sangat baik dan cukup kuat dalam memodelkan hubungan antara fitur input dan target yang diprediksi.
