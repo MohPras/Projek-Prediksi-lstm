@@ -462,7 +462,7 @@ data_scaled.describe()
 
 
 ## Modeling
-Pada tahap *modeling*, digunakan algoritma **Long Short-Term Memory (LSTM)** untuk memprediksi **suhu air (Water Temperature)** karena kemampuannya menangkap pola jangka panjang dalam data time series. Proses dimulai dari import library, data wrangling, eksplorasi data, preprocessing (penanganan outlier dan normalisasi), hingga pembuatan input time series. Selanjutnya dilakukan **hyperparameter tuning** terhadap parameter seperti `window_size`, `epoch`, `lstm_units`, `test_size` dan `batch_size` dengan evaluasi menggunakan **MSE**, **RMSE**, **MAE**, dan **R²**. Hasil akhir menunjukkan model mampu memberikan prediksi akurat dengan **R² sebesar 85–86%** dan error yang rendah, baik pada pendekatan univariate maupun multivariate.
+Pada tahap *modeling*, digunakan algoritma **Long Short-Term Memory (LSTM)** untuk memprediksi **suhu air (Water Temperature)** karena kemampuannya menangkap pola jangka panjang dalam data time series. Hasil akhir menunjukkan model mampu memberikan prediksi akurat dengan error yang rendah, baik pada pendekatan univariate maupun multivariate.
 
 <div align="center">
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/0ddf6a48-85e8-44bc-a7f2-d450dc954a38" />
@@ -501,44 +501,43 @@ Kriteria Evaluasi pemilihan parameter terbaik untuk setiap kombinasi parameter m
 * **MAE (Mean Absolute Error)** – Digunakan untuk mengetahui seberapa jauh prediksi model dari nilai aktual secara rata-rata.
 * **R² (R-squared)** – Digunakan untuk menilai seberapa baik model menjelaskan variasi data. Kombinasi parameter dengan **R² tertinggi mendekati 1** dianggap paling akurat.
 
-Pemilihan hyperparameter terbaik dilakukan berdasarkan kombinasi yang menghasilkan parameter:
+Pemilihan hyperparameter terbaik dilakukan berdasarkan kombinasi yang menghasilkan parameter MSE serendah mungkin, R² setinggi mungkin (mendekati 1), RMSE dan MAE kecil. Dengan pendekatan ini, model LSTM yang dihasilkan mampu memberikan **prediksi suhu air dengan akurasi tinggi dan kesalahan minimal**, baik dalam pendekatan univariate maupun multivariate.
 
-* **MSE serendah mungkin**
-* **R² setinggi mungkin** (mendekati 1)
-* **RMSE dan MAE kecil**, menunjukkan bahwa model memiliki kesalahan prediksi yang rendah dan konsisten
-
-Dengan pendekatan ini, model LSTM yang dihasilkan mampu memberikan **prediksi suhu air dengan akurasi tinggi dan kesalahan minimal**, baik dalam pendekatan univariate maupun multivariate.
-
-#### 4. **Hasil Model Dengan Tuning Hyperparameter**
+### Hasil Model Dengan Tuning Hyperparameter
 
 Hasil Akhir dari kombinasi parameter yang dipilih untuk Unvariante dan Multivariante sebagai berikut:
 
-* Kedua pendekatan (univariate dan multivariate) berhasil mencapai nilai **R² antara 85% hingga 86%**, menunjukkan bahwa model mampu menangkap pola dengan sangat baik.
-* Nilai error (MAE dan RMSE) juga **relatif kecil**, yang berarti deviasi antara nilai prediksi dan aktual rendah.
-* Baik pendekatan univariate maupun multivariate sama-sama memberikan hasil yang sangat baik, namun pendekatan **multivariate memberikan keunggulan tambahan** karena mempertimbangkan hubungan antar fitur lingkungan.
+1. Kedua pendekatan (univariate dan multivariate) berhasil mencapai nilai **R² 85%%**, menunjukkan bahwa model mampu menangkap pola dengan sangat baik.
 
-#### 5. **Program Multivariate Single Forcasting Water Temperature**
+2. Nilai error (MAE dan RMSE) juga **relatif kecil**, yang berarti deviasi antara nilai prediksi dan aktual rendah.
 
-##### Kode Program Hyperparameter Tunning
+3. Baik pendekatan univariate maupun multivariate sama-sama memberikan hasil yang sangat baik.
+
+4. Pendekatan **multivariate memberikan keunggulan tambahan** karena mempertimbangkan hubungan antar fitur lingkungan, sehingga pendekatan multivarite dipilih untuk dilakukan pembahasan lebih.
+
+### Program Multivariate Single Forcasting Water Temperature
+
+Pada penelitian ini pendekatan multivariate dipilih untuk dibahas karena dinilai lebih relevan dalam menggambarkan dinamika sistem yang dipelajari. Meskipun performa model multivariate dan univariate menunjukkan nilai R² yang sama, yaitu 0.85, pendekatan **multivariate** dipilih untuk dibahas dalam penelitian ini karena mampu menangkap **kompleksitas hubungan antar variabel** yang tidak dapat ditangani oleh model univariate. 
+
+Dalam pendekatan ini, model mempertimbangkan lebih dari satu variabel input, sehingga dapat mengidentifikasi pola dan interaksi yang saling memengaruhi antar parameter lingkungan, seperti suhu air, suhu udara, dan kelembapan. Pendekatan multivariate memberikan representasi yang lebih realistis terhadap kondisi alami yang kompleks, sehingga meskipun hasil evaluasi secara numerik serupa, pemahaman yang dihasilkan lebih mendalam dan aplikatif.
+
+#### Kode Program Hyperparameter Tunning
 
 ```python
-# set fitur
-suhu_udara2 = ['WaterTemp (C)', 'AirTemp (C)', 'DissolvedOxygen (mg/L)', 'Salinity (ppt)','pH']
-features = data_scaled[suhu_udara2]
-features.head()
-```
-```python
-import numpy as np
-import pandas as pd
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+# ===== SETUP SEED DAN DETERMINISME =====
+seed = 42
+os.environ['PYTHONHASHSEED'] = str(seed)
+random.seed(seed)
+np.random.seed(seed)
+tf.random.set_seed(seed)
+tf.config.experimental.enable_op_determinism()
 
-# Fitur dan target
-features = df_clear[suhu_udara2].values
-target = df_clear['WaterTemp (C)'].values  # Target = suhu air
+# ===== PERSIAPAN DATA =====
+# Fitur multivariat, misal: suhu udara, kelembapan udara
+features = data_scaled[suhu_udara2].values  # asumsi: suhu_udara2 adalah list kolom fitur
+target = data_scaled['WaterTemp (C)'].values
 
-# Fungsi untuk membuat urutan (windowed data)
+# ===== FUNGSI MEMBUAT SEQUENCE DATA =====
 def create_sequences(features, target, window_size):
     X, y = [], []
     for i in range(len(features) - window_size):
@@ -546,17 +545,17 @@ def create_sequences(features, target, window_size):
         y.append(target[i+window_size])
     return np.array(X), np.array(y)
 
-# Parameter yang akan diuji
+# ===== PARAMETER YANG AKAN DIUJI =====
 window_sizes = [5, 10, 15]
 epochs_list = [10, 20]
 lstm_units_list = [32, 50]
 batch_sizes = [16, 32]
-test_sizes = [0.1, 0.2, 0.3]  # Variasi test size
+test_sizes = [0.2, 0.3, 0.4]
 
-# Dictionary untuk simpan hasil
+# ===== DICTIONARY HASIL =====
 results = {
     'window_size': [],
-    'epoch': [],
+    'epochs': [],
     'lstm_units': [],
     'batch_size': [],
     'test_size': [],
@@ -567,10 +566,12 @@ results = {
     'total_params': []
 }
 
-# Loop eksperimen
+# ===== LOOP UTAMA EKSPERIMEN =====
 for window_size in window_sizes:
-    # Buat dataset sequence
     X, y = create_sequences(features, target, window_size)
+
+    # Reshape untuk LSTM: (samples, timesteps, features)
+    X = X.reshape((X.shape[0], X.shape[1], X.shape[2]))
 
     for test_size in test_sizes:
         split_idx = int(len(X) * (1 - test_size))
@@ -582,19 +583,15 @@ for window_size in window_sizes:
                 for batch_size in batch_sizes:
                     print(f"Training LSTM: window={window_size}, epochs={epochs}, units={units}, batch={batch_size}, test_size={test_size}")
 
-                    # Buat dan kompilasi model
                     model = Sequential()
-                    model.add(LSTM(units, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
+                    model.add(LSTM(units, input_shape=(X_train.shape[1], X_train.shape[2])))  # default tanh
                     model.add(Dense(1))
                     model.compile(optimizer='adam', loss='mse')
 
-                    # Training
                     model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0, validation_split=0.2)
 
-                    # Prediksi
-                    y_pred = model.predict(X_test)
+                    y_pred = model.predict(X_test).flatten()
 
-                    # Evaluasi
                     mse = mean_squared_error(y_test, y_pred)
                     rmse = np.sqrt(mse)
                     mae = mean_absolute_error(y_test, y_pred)
@@ -603,9 +600,8 @@ for window_size in window_sizes:
 
                     print(f"MSE: {mse:.4f}, RMSE: {rmse:.4f}, MAE: {mae:.4f}, R²: {r2:.4f}, Params: {total_params}\n")
 
-                    # Simpan hasil
                     results['window_size'].append(window_size)
-                    results['epoch'].append(epochs)
+                    results['epochs'].append(epochs)
                     results['lstm_units'].append(units)
                     results['batch_size'].append(batch_size)
                     results['test_size'].append(test_size)
@@ -616,46 +612,123 @@ for window_size in window_sizes:
                     results['total_params'].append(total_params)
 ```
 
-##### Hasil Parameter Terbaik
+#### Hasil Parameter Terbaik
 
 ```python
 📌 Kombinasi parameter terbaik berdasarkan MSE terkecil:
-window_size        15.000000
-epoch              20.000000
+window_size         5.000000
+epochs             20.000000
 lstm_units         50.000000
 batch_size         16.000000
 test_size           0.300000
-MSE                 0.004380
-RMSE                0.066184
-MAE                 0.045988
-R2                  0.865441
-total_params    11251.000000
-Name: 70, dtype: float64
+MSE                 0.004818
+RMSE                0.069415
+MAE                 0.047560
+R2                  0.852922
 ```
+
+#### Build Model Dengan Menggunakan Kombinasi Parameter Terbaik
+
+**Seting Konfigurasi**
+
+Bagian ini mengatur reproducibility (agar hasil eksperimen konsisten setiap kali dijalankan) dengan menyetel seed di Python, NumPy, dan TensorFlow. Kemudian ditentukan parameter utama model seperti ukuran window, jumlah epoch, jumlah unit LSTM, ukuran batch, dan proporsi data uji.
+
 ```python
 # ========== Konfigurasi ==========
-# Set seed agar hasil konsisten
-np.random.seed(42)
-tf.random.set_seed(42)
+
+# Set seed untuk memastikan reproducibility
+seed = 42
+os.environ['PYTHONHASHSEED'] = str(seed)      # Untuk Python hash randomization
+random.seed(seed)                             # Untuk modul random
+np.random.seed(seed)                          # Untuk NumPy
+tf.random.set_seed(seed)                      # Untuk TensorFlow
+tf.config.experimental.enable_op_determinism()  # Pastikan semua operasi deterministik
 
 # Parameter terbaik
-window_size = 15
+window_size = 5
 epochs = 20
 lstm_units = 50
 batch_size = 16
 test_size = 0.3
 ```
 
-##### Hasil Model
+**Set Fitur Dan Target**
+
+Bagian ini menyiapkan data dengan memilih beberapa kolom sebagai fitur (input) dan satu kolom sebagai target (output), lalu memisahkannya menjadi variabel X_raw untuk input dan y_raw untuk output.
+
+```python
+# ========== Siapkan Data ==========
+# Kolom fitur dan target
+features_columns = ['WaterTemp (C)', 'AirTemp (C)', 'DissolvedOxygen (mg/L)', 'Salinity (ppt)', 'pH']
+target_column = 'WaterTemp (C)'
+
+# pisahkan fitur dan target
+X_raw = df_clear[features_columns].values
+y_raw = df_clear[[target_column]].values 
+```
+
+**Scaling Data**
+
+Bagian ini melakukan scaling (normalisasi) data fitur dan target ke rentang 0–1 menggunakan MinMaxScaler agar model lebih stabil dan cepat saat dilatih.
+
+```python
+# ========== Scaling Data ==========
+
+from sklearn.preprocessing import MinMaxScaler
+
+# --- Scaling untuk fitur multivariate ---
+scaler_X = MinMaxScaler()
+X_scaled = scaler_X.fit_transform(X_raw)
+
+# --- Scaling untuk target suhu air ---
+scaler_y = MinMaxScaler()
+y_scaled = scaler_y.fit_transform(y_raw)
+```
+
+**Fungsi Windowing**
+
+Bagian ini membuat data berurutan (windowing) agar cocok untuk model LSTM, dengan cara mengelompokkan data fitur dan target berdasarkan ukuran jendela (`window_size`). Hasilnya disimpan di `X_seq` dan `y_seq`.
+
+```python
+# ========== Fungsi Windowing ==========
+def create_sequences(X, y, window_size):
+    Xs, ys = [], []
+    for i in range(len(X) - window_size):
+        Xs.append(X[i:i+window_size])
+        ys.append(y[i+window_size])
+    return np.array(Xs), np.array(ys)
+
+X_seq, y_seq = create_sequences(X_scaled, y_scaled, window_size)
+```
+
+**Split Dataset**
+
+Bagian ini membagi data berurutan (X_seq, y_seq) menjadi data latih (70%) dan data uji (30%) untuk keperluan pelatihan dan evaluasi model.
+
+```python
+# ========== Split Dataset ==========
+
+# Split
+split_index = int(len(X_seq) * 0.7)
+X_train, X_test = X_seq[:split_index], X_seq[split_index:]
+y_train, y_test = y_seq[:split_index], y_seq[split_index:]
+```
+
+
+### Hasil Model
+
+Bagian ini membangun model LSTM sederhana dengan 1 layer LSTM dan 1 layer output Dense, lalu dikompilasi menggunakan optimizer Adam dan fungsi loss MSE untuk regresi.
 
 ```python
 # ========== Bangun Model LSTM ==========
 model = Sequential([
-    LSTM(lstm_units, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])),
+    LSTM(lstm_units, activation='tanh', input_shape=(X_train.shape[1], X_train.shape[2])),
     Dense(1)
 ])
 model.compile(optimizer='adam', loss='mse')
 ```
+Bagian ini melatih model LSTM dengan data latih selama beberapa epoch, menggunakan batch tertentu, dan menyisihkan 20% data latih untuk validasi.
+
 ```python
 # ========== Training ==========
 history = model.fit(
@@ -677,8 +750,8 @@ history = model.fit(
 
 * Model memiliki **kemampuan yang baik dalam mengikuti pola tren** dari suhu air.
 * Perbedaan kecil antara kurva aktual dan prediksi menunjukkan adanya **deviasi minor**, namun secara keseluruhan akurat.
-* Visualisasi ini mendukung hasil metrik evaluasi sebelumnya (**MSE: 0.004488**, **R²: 0.862124**) yang menunjukkan **kinerja model yang kuat dan stabil**.
 
+  
 ## Evaluation
 
 Evaluasi model dilakukan untuk mengukur performa prediksi suhu air (Water Temperature) menggunakan metrik error dan akurasi. Empat metrik utama digunakan, yaitu **Mean Squared Error (MSE)**, **Root Mean Squared Error (RMSE)**, **Mean Absolute Error (MAE)**, dan **R-squared (R²)**.
@@ -698,19 +771,19 @@ mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
 print(f"\n📊 Evaluasi Akhir:")
-print(f"MSE  : {mse:.6f}")
-print(f"RMSE : {rmse:.6f}")
-print(f"MAE  : {mae:.6f}")
-print(f"R²   : {r2:.6f}")
+print(f"MSE  : {mse:.4f}")
+print(f"RMSE : {rmse:.4f}")
+print(f"MAE  : {mae:.4f}")
+print(f"R²   : {r2:.2f}")
 ```
 ```python
-23/23 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step
+23/23 ━━━━━━━━━━━━━━━━━━━━ 1s 16ms/step
 
 📊 Evaluasi Akhir:
-MSE  : 0.004488
-RMSE : 0.066994
-MAE  : 0.047635
-R²   : 0.862124
+MSE  : 0.0048
+RMSE : 0.0694
+MAE  : 0.0475
+R²   : 0.85
 ```
 ```python
 # ========== Plot Loss Training & Validation ==========
@@ -733,9 +806,7 @@ plt.show()
 </div>
 
 **Kesimpulan Evaluasi**
-1. Nilai MSE dan RMSE yang relatif kecil menunjukkan bahwa rata-rata kesalahan prediksi yang dilakukan oleh model sangat rendah. Ini mengindikasikan bahwa perbedaan antara nilai aktual dan nilai prediksi tidak signifikan secara kuantitatif. Nilai MAE yang juga rendah memperkuat indikasi tersebut, dengan rata-rata kesalahan absolut sebesar 0.0476. Sementara itu, nilai R² sebesar 0.8621 menunjukkan bahwa sekitar 86.21% variasi pada data target dapat dijelaskan oleh model. Ini merupakan indikasi bahwa model memiliki kemampuan prediktif yang sangat baik dan cukup kuat dalam memodelkan hubungan antara fitur input dan target yang diprediksi.
+1. Nilai MSE dan RMSE yang relatif kecil menunjukkan bahwa rata-rata kesalahan prediksi yang dilakukan oleh model sangat rendah. Ini mengindikasikan bahwa perbedaan antara nilai aktual dan nilai prediksi tidak signifikan secara kuantitatif. Nilai MAE yang juga rendah memperkuat indikasi tersebut, dengan rata-rata kesalahan absolut yang kecil. Sementara itu, nilai R² sebesar 0.85 menunjukkan bahwa sekitar 85% variasi pada data target dapat dijelaskan oleh model. Ini merupakan indikasi bahwa model memiliki kemampuan prediktif yang sangat baik dan cukup kuat dalam memodelkan hubungan antara fitur input dan target yang diprediksi.
    
 3. Pada grafik Ploting Training & Validation Loss over Epochs Secara keseluruhan, grafik ini menunjukkan bahwa model yang dilatih memiliki proses pembelajaran yang stabil, tanpa tanda-tanda *overfitting* maupun *underfitting* yang berarti. Dengan nilai loss yang rendah dan kurva yang stabil, model dapat dikatakan memiliki performa yang baik dalam melakukan generalisasi terhadap data yang tidak terlihat selama pelatihan.
-
-
 
