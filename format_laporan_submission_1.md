@@ -106,22 +106,21 @@ files.upload()
 ```
 ### Informasi Data
 
-Dataset yang digunakan berisi 2371 baris dan 7 kolom yang merepresentasikan kualitas air, dengan fitur-fitur sebagai berikut:
-- Date: Tanggal pengukuran
-- Salinity (ppt): Tingkat salinitas air
-- Dissolved Oxygen (mg/L): Oksigen terlarut
-- pH: Tingkat keasaman air
-- Secchi Depth (m): Kedalaman visibilitas (kejernihan air)
-- Water Depth (m): Kedalaman air
-- Water Temp (°C): Suhu air
-- Air Temp (°C): Suhu udara
+Dataset yang digunakan berisi 2371 baris dan 8 kolom yang merepresentasikan kualitas air, dengan fitur-fitur sebagai berikut:
+- Date: Tanggal pengukuran yang bertipe object
+- Salinity (ppt): Tingkat salinitas air yang bertipe float
+- Dissolved Oxygen (mg/L): Oksigen terlarut yang bertipe float
+- pH: Tingkat keasaman air yang bertipe float
+- Secchi Depth (m): Kedalaman visibilitas (kejernihan air) yang bertipe float
+- Water Depth (m): Kedalaman air yang bertipe float
+- Water Temp (°C): Suhu air bertipe yang float
+- Air Temp (°C): Suhu udara bertipe yang float
 
-### Eksplorasi Data & Visualisasi Data
+### Data Wrangling
 
-Beberapa langkah Exploratory Data Analysis (EDA) telah dilakukan untuk memahami distribusi serta hubungan antar fitur dalam dataset. Di bawah ini merupakan ringkasan dari beberapa tahapan EDA yang telah dilakukan. 
+Beberapa langkah data wrangling telah dilakukan untuk mengolah data menjadi data clean yang bebas dar bias.
 
-#### Data Wrangling
-##### 1. Download Data
+#### 1. Download Data
 Gunakan kode di bawah ini untuk download dataset dari Kaggle dengan Kaggle API.
 
 ```python
@@ -143,7 +142,7 @@ files.upload()
 
 ---
 
-##### 2. Data Akuisisi
+#### 2. Data Akuisisi
 Gunakan kode di bawah ini untuk akuisisi data dengan pandas.
 
 ```python
@@ -157,7 +156,7 @@ data.head()
 
 ---
 
-##### 3. Data Assessing
+#### 3. Data Assessing
 Gunakan kode di bawah ini untuk cek data apakah ada missing value dan duplicated data.
 
 ```python
@@ -169,36 +168,157 @@ data.isna().sum()
 
 # Cek duplikasi data
 print('duplikasi data: ', data.duplicated().sum())
+
+# cek outlier value
+
+# Pilih hanya kolom dengan tipe data numerik
+numeric_columns = data.select_dtypes(include=['number']).columns
+
+# Hitung jumlah outlier per kolom numerik
+for feature in numeric_columns:
+    # Hitung batas IQR untuk deteksi outlier
+    Q1 = data[feature].quantile(0.25)
+    Q3 = data[feature].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Hitung jumlah outlier
+    outliers = data[(data[feature] < lower_bound) | (data[feature] > upper_bound)]
+    print(f"Jumlah outlier pada kolom '{feature}': {len(outliers)}")
 ```
+
+Kesimpulan pada data assesing ini:
+1. Terdapat data bertipe object dan float
+2. Terdapat missing value yang sangat banyak pada kolom
+   - Salinity (ppt) = 130
+   - DissolvedOxygen (mg/L) = 851
+   - pH = 95
+   - SecchiDepth (m) = 73
+   - WaterDepth (m) = 71
+   - kolom WaterTemp (C) = 121
+     
+3. Terdapat duplikasi data sebanyak 10
+   
+4. Terdapat outlier pada dataset
+   - Jumlah outlier pada kolom 'Salinity (ppt)': 272
+   - Jumlah outlier pada kolom 'DissolvedOxygen (mg/L)': 11
+   - Jumlah outlier pada kolom 'pH': 47
+   - Jumlah outlier pada kolom 'SecchiDepth (m)': 85
+   - Jumlah outlier pada kolom 'WaterDepth (m)': 37
+   - Jumlah outlier pada kolom 'WaterTemp (C)': 5
+   - Jumlah outlier pada kolom 'AirTemp (C)': 69
 
 ---
 
-##### 4. Data Cleaning
-Gunakan kode untuk cleaning data missing value dan juga konversi data. Metode interpolasi dipilih karena cocok untuk time series data sensor.
+#### 4. Data Cleaning
+**Penanganan missing value**
+
+Tahap pertama adalah penanganan missing value pada dataset ini menggunakan IterativeImputer dengan RandomForest. Alasan penggunaan IterativeImputer dengan RandomForest adalah metode paling cocok dan minim bias untuk data seperti ini karena dapat menangani missing value secara cerdas dengan mempertimbangkan hubungan antar fitur, menjaga distribusi alami data, dan cocok untuk variabel-variabel lingkungan yang saling memengaruhi. Berikut ini adalah kode program untuk menagatasi missing value
 
 ```python
-# Mengatasi missing value dengan interpolate
-data['Salinity (ppt)'] = data['Salinity (ppt)'].interpolate(method='linear')
-data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].interpolate(method='linear')
-data['pH'] = data['pH'].interpolate(method='linear')
-data['SecchiDepth (m)'] = data['SecchiDepth (m)'].interpolate(method='linear')
-data['WaterDepth (m)'] = data['WaterDepth (m)'].interpolate(method='linear')
-data['WaterTemp (C)'] = data['WaterTemp (C)'].interpolate(method='linear')
+from sklearn.experimental import enable_iterative_imputer  # noqa
+from sklearn.impute import IterativeImputer
+from sklearn.ensemble import RandomForestRegressor
 
-# Fill forward/backward setelah interpolate
-data['Salinity (ppt)'] = data['Salinity (ppt)'].fillna(method='ffill').fillna(method='bfill')
-data['DissolvedOxygen (mg/L)'] = data['DissolvedOxygen (mg/L)'].fillna(method='ffill').fillna(method='bfill')
+# Inisialisasi imputernya
+imputer = IterativeImputer(estimator=RandomForestRegressor(), random_state=42)
 
-# Mengatasi missing value pada kolom Date
-print(data['Date'].isna().sum())     # berapa banyak missing
-print(data['Date'].head(10))         # contoh data awal
-print(data[data['Date'].isna()])     # lihat baris yang missing Date
+# Simpan kolom non-numerik terpisah
+non_numerik = data.select_dtypes(exclude='number')
+numerik = data.select_dtypes(include='number')
 
-data['Date'] = data['Date'].fillna(method='ffill')
+# Imputasi hanya data numerik
+numerik_imputed = pd.DataFrame(imputer.fit_transform(numerik), columns=numerik.columns)
+
+# Gabungkan kembali dengan kolom non-numerik (jika ada)
+df_imputed = pd.concat([non_numerik.reset_index(drop=True), numerik_imputed], axis=1)
+
+# Hapus baris yang nilai 'Date'-nya kosong
+data = df_imputed.dropna(subset=['Date'])
+```
+<div align="center">
+<img width="300" alt="image" src="https://github.com/user-attachments/assets/de87a23d-161d-4e83-80cb-a52b8552d9ed" />
+<br/>
+<strong>Gambar.</strong> Hasil penanganan missing value
+</div>
+
+**Penanganan duplikasi data**
+
+Tahap kedua pada data assesing ini juga ditemukan jumlah duplikat data hanya sedikit yaitu sebanyak 10 baris maka solusi yang dipakai adalah penghapusan, penghapusan tidak akan berdampak signifikan terhadap keseluruhan jumlah data. Kehadiran data duplikat dapat menyebabkan bias atau menguatkan pola palsu yang tidak merepresentasikan kondisi sebenarnya, terutama ketika data digunakan untuk analisis atau pelatihan model. Dalam konteks data lingkungan atau sains, setiap baris umumnya merepresentasikan satu pengamatan yang bersifat unik, sehingga keberadaan duplikat tidak memberikan nilai tambah dan sebaiknya dihapus untuk menjaga integritas data.
+
+```python
+# Hapus baris yang sepenuhnya duplikat
+data = data.drop_duplicates()
+print('Duplicat data setelah penghapusan: ', data.duplicated().sum())
+
+# output 
+Duplicat data setelah penghapusan:  0
 ```
 
+**Penanganan outlier data**
 
-#### Exploratory Data Analisis
+Tahap ketiga dalam data cleaning ini adalah menangani outlier pada data dengan menggunakan metode IQR. Langkah pertama adalah mengidentifikasi outlier menggunakan boxplot, yang secara visual memperlihatkan nilai-nilai ekstrem di luar rentang normal (di luar whisker dari boxplot). Ini dilakukan untuk setiap kolom numerik.
+
+```python
+# Pilih hanya kolom dengan tipe data numerik
+numeric_columns = data.select_dtypes(include=['number']).columns
+
+# Plot boxplot hanya untuk kolom numerik
+for feature in numeric_columns:
+    plt.figure(figsize=(10, 5))
+    plt.boxplot(x=data[feature])
+    plt.title(f"Box Plot Of {feature}")
+    plt.show()
+```
+
+<div align="center">
+<img width="776" alt="image" src="https://github.com/user-attachments/assets/b805d646-2876-4784-ad6c-d4239ba04277" />
+<br/>
+<strong>Gambar 2.</strong> Hasil Cek Outlier
+</div>
+
+Setelah outlier terdeteksi, digunakan metode Interquartile Range (IQR) untuk menentukan batas bawah dan atas dari nilai normal. Outlier kemudian digantikan dengan nilai median dari kolom tersebut. Metode ini dipilih karena median tidak terpengaruh oleh nilai ekstrem dan mampu mempertahankan distribusi alami data.
+
+```pyhton
+# Tangani outlier
+
+# Pilih hanya kolom dengan tipe data numerik
+numeric_columns = data.select_dtypes(include=['number']).columns
+
+# Tangani outlier dengan mengganti dengan median atau mean
+for feature in numeric_columns:
+    Q1 = data[feature].quantile(0.25)
+    Q3 = data[feature].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Buat mask untuk outlier
+    outliers = (data[feature] < lower_bound) | (data[feature] > upper_bound)
+
+    # Ganti outlier dengan median (atau bisa ganti jadi df[feature].mean())
+    median_value = data[feature].median()
+    data.loc[outliers, feature] = median_value
+```
+<div align="center">
+<img width="786" alt="image" src="https://github.com/user-attachments/assets/ead1ae5d-0415-4c58-8635-c4cc88801f6f" />
+<br/>
+<strong>Gambar 3.</strong> Hasil Penanganan Outlier Dengan Median
+</div>
+
+**Konversi Tipe Data**
+
+Tahap terahir yang dilakukan dalam data cleaning ini adalah ubah tipe data object pada kolom date dan jadikan sebagai index, berikut adalah kodenya:
+
+```python
+# Ubah Kolom Date jadi datetime dan set sebagai index
+data['Date'] = pd.to_datetime(data['Date'])
+data.set_index('Date', inplace=True)
+data = data.sort_index()  # pastikan urut waktu
+```
+
+### Exploratory Data Analisis
 
 Tahap eksplorasi data ini bertujuan untuk memahami struktur, karakteristik, serta pola yang terkandung dalam dataset sebelum dilakukan proses analisis lanjutan atau pemodelan. Dengan melakukan eksplorasi data, kita dapat mengidentifikasi berbagai hal penting seperti jumlah data, tipe data pada masing-masing kolom, nilai yang hilang, distribusi nilai, serta hubungan antar variabel. Proses ini juga membantu dalam menemukan potensi outlier, tren musiman, atau pola waktu tertentu yang dapat memengaruhi hasil analisis. Selain itu, eksplorasi data sangat penting untuk memastikan kualitas data yang digunakan sudah memadai dan sesuai dengan tujuan analisis, sehingga proses selanjutnya dapat dilakukan secara lebih akurat dan efisien. Beberapa langkah yang dilakukan meliputi:
 ##### 1. Menampilkan Informasi Umum Dataset  
@@ -304,61 +424,7 @@ plt.show()
 
 
 ## Data Preparation
-Tahap data preparation (persiapan data) merupakan proses penting dalam analisis data dan pemodelan, karena memastikan bahwa data dalam kondisi bersih, konsisten, dan siap digunakan untuk pelatihan model. Pada tahap ini, dilakukan beberapa langkah utama:
-
-1. Deteksi dan penanganan outlier
-2. Normalisasi fitur numerik
-   
-Kedua langkah ini bertujuan untuk meningkatkan kualitas data agar hasil analisis dan prediksi dari model lebih akurat dan tidak bias terhadap nilai ekstrem atau perbedaan skala antar variabel.
-
-### Cek outlier
-Langkah pertama adalah mengidentifikasi outlier menggunakan boxplot, yang secara visual memperlihatkan nilai-nilai ekstrem di luar rentang normal (di luar whisker dari boxplot). Ini dilakukan untuk setiap kolom numerik.
-```python
-# Pilih hanya kolom dengan tipe data numerik
-numeric_columns = data.select_dtypes(include=['number']).columns
-
-# Plot boxplot hanya untuk kolom numerik
-for feature in numeric_columns:
-    plt.figure(figsize=(10, 5))
-    plt.boxplot(x=data[feature])
-    plt.title(f"Box Plot Of {feature}")
-    plt.show()
-```
-
-<div align="center">
-<img width="776" alt="image" src="https://github.com/user-attachments/assets/b805d646-2876-4784-ad6c-d4239ba04277" />
-<br/>
-<strong>Gambar 2.</strong> Hasil Cek Outlier
-</div>
-
-### Tangani Outlier Metode IQR
-Setelah outlier terdeteksi, digunakan metode Interquartile Range (IQR) untuk menentukan batas bawah dan atas dari nilai normal. Outlier kemudian digantikan dengan nilai median dari kolom tersebut. Metode ini dipilih karena median tidak terpengaruh oleh nilai ekstrem dan mampu mempertahankan distribusi alami data.
-```pyhton
-# Tangani outlier
-
-# Pilih hanya kolom dengan tipe data numerik
-numeric_columns = data.select_dtypes(include=['number']).columns
-
-# Tangani outlier dengan mengganti dengan median atau mean
-for feature in numeric_columns:
-    Q1 = data[feature].quantile(0.25)
-    Q3 = data[feature].quantile(0.75)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-
-    # Buat mask untuk outlier
-    outliers = (data[feature] < lower_bound) | (data[feature] > upper_bound)
-
-    # Ganti outlier dengan median (atau bisa ganti jadi df[feature].mean())
-    median_value = data[feature].median()
-    data.loc[outliers, feature] = median_value
-```
-<div align="center">
-<img width="786" alt="image" src="https://github.com/user-attachments/assets/ead1ae5d-0415-4c58-8635-c4cc88801f6f" />
-<br/>
-<strong>Gambar 3.</strong> Hasil Penanganan Outlier Dengan Median
-</div>
+Tahap data preparation (persiapan data) merupakan proses penting dalam analisis data dan pemodelan, karena memastikan bahwa data dalam kondisi bersih, konsisten, dan siap digunakan untuk pelatihan model. Pada tahap ini, dilakukan beberapa langkah utama yaitu Normalisasi data mengguakan MinMaxScaler.Langkah ini bertujuan untuk meningkatkan kualitas data agar hasil analisis dan prediksi dari model lebih akurat dan tidak bias terhadap nilai ekstrem atau perbedaan skala antar variabel.
 
 ### Normalisasi Data
 Setelah menangani outlier, dilakukan normalisasi data agar semua fitur numerik berada dalam skala yang seragam, umumnya antara 0 dan 1. Proses ini penting karena algoritma machine learning seperti KNN, SVM, atau Neural Networks sensitif terhadap perbedaan skala. Jika tidak dinormalisasi, fitur dengan rentang nilai besar akan mendominasi model dan menghasilkan prediksi yang bias.
