@@ -1,6 +1,10 @@
-# Proyek Akhir: Menyelesaikan Permasalahan Perusahaan Edutech
+# Proyek Akhir: Menyelesaikan Permasalahan attrition rate di perusahaan multinasional Jaya Jaya Maju
 
 ## Business Understanding
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/c901980e-c86b-42a7-9979-3f6a8dfee4a6" alt="Gambar 1: Alur Proyek Sistem Rekomendasi" width="800"/>
+</div>
 
 ### Latar Belakang 
 
@@ -12,26 +16,7 @@ Namun, meskipun sudah memiliki skala yang besar, perusahaan menghadapi tantangan
 
 Masalah ini menjadi perhatian utama departemen Human Resources (HR), yang ingin memahami faktor-faktor utama penyebab tingginya attrition tersebut dan berupaya melakukan langkah-langkah strategis untuk mengurangi angka tersebut. Untuk itu, diperlukan analisis mendalam dan sistem pemantauan yang efektif agar manajemen dapat mengambil keputusan berbasis data dan melakukan intervensi tepat waktu dalam pengelolaan karyawan.
 
-
-### Pertanyaan Bisnis
-
-1. Berapa total karyawan aktif dan berapa yang sudah keluar (attrition)?
-
-2. Bagaimana tingkat attrition secara keseluruhan dan per departemen?
-
-3. Apa distribusi usia dan lama kerja karyawan saat ini?
-
-4. Bagaimana distribusi karyawan berdasarkan jabatan dan departemen?
-
-5. Apakah ada perbedaan attrition rate berdasarkan gender, business travel, dan pendidikan?
-
-6. Bagaimana korelasi antara gaji, jam kerja, dan pelatihan dengan attrition?
-
-7. Apakah performa karyawan berpengaruh terhadap kemungkinan attrition?
-
-8. Bagaimana tingkat kepuasan kerja (job satisfaction) berhubungan dengan attrition?
-
-9. Siapa karyawan dengan risiko tinggi keluar berdasarkan performa dan lama kerja?
+------------------------------
 
 ### Permasalahan Bisnis
 
@@ -52,6 +37,7 @@ Masalah ini menjadi perhatian utama departemen Human Resources (HR), yang ingin 
 5. **Dampak Negatif dari Attrition terhadap Biaya dan Produktivitas**
    Tingginya attrition meningkatkan biaya rekrutmen, pelatihan, serta mengurangi produktivitas akibat kehilangan karyawan berpengalaman dan perlu adaptasi karyawan baru.
 
+------------------------------
 
 ### Cakupan Proyek
 
@@ -82,25 +68,102 @@ Masalah ini menjadi perhatian utama departemen Human Resources (HR), yang ingin 
    * Memberikan insight dan rekomendasi berbasis data kepada manajemen HR untuk mengurangi tingkat attrition.
    * Menyusun langkah-langkah strategis yang bisa diambil berdasarkan hasil analisis.
 
-6. **Dokumentasi dan Pelaporan**
+6. **Membuat Model Machine Learning**
 
-   * Menyusun dokumentasi hasil analisis dan cara penggunaan dashboard.
-   * Menyiapkan laporan lengkap yang bisa digunakan sebagai bahan presentasi kepada stakeholder.
+   * Mengembangkan model machine learning berbasis klasifikasi untuk memprediksi status karyawan berdasarkan variabel-variabel faktor penyebab attrition
 
+------------------------------
 
 ### Persiapan
 
-Sumber data: ....
+**Data source:** [Employee data](https://github.com/dicodingacademy/dicoding_dataset/tree/main/employee 'Dicoding GitHub - Employee data')
 
-Setup environment:
+#### Setup environment:
 
+Ikuti langkah-langkah berikut untuk menjalankan proyek ini di lingkungan lokal Anda:
+
+1. **Clone Repository**
+
+   ```bash
+   git clone <URL-repo>
+   ```
+
+2. **Buat dan Aktifkan Virtual Environment**
+
+   * **Untuk Windows:**
+
+     ```bash
+     python -m venv venv
+     venv\Scripts\activate
+     ```
+
+   * **Untuk macOS/Linux:**
+
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+
+3. **Install Dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+##### Catatan:
+
+* Pastikan Anda sudah menginstal **Python 3.8 atau lebih tinggi**.
+* Gunakan `python` atau `python3` sesuai dengan OS dan pengaturan sistem Anda.
+* Jika menggunakan **Anaconda**, Anda bisa membuat environment dengan:
+
+  ```bash
+  conda create --name attrition-env python=3.9
+  conda activate attrition-env
+  pip install -r requirements.txt
+  ```
+
+#### Install dan import library
+```python
+# install library
+!pip install xgboost
+
+# ---- # import library ----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+# ---- preprocesing data ----
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
+from sklearn.model_selection import train_test_split
+from imblearn.under_sampling import RandomUnderSampler
+from collections import Counter
+# ---- klasifikasi xgb ----
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV
+# ---- random forest klasifikasi ----
+from sklearn.ensemble import RandomForestClassifier
+# ---- save model ----
+import joblib
+# ---- evaluasi ----
+from sklearn.metrics import accuracy_score, f1_score, classification_report, precision_score, recall_score, confusion_matrix, ConfusionMatrixDisplay, roc_auc_score
+from sklearn.metrics import ConfusionMatrixDisplay
+
+# ---- Set style ----
+sns.set(style='whitegrid')
 ```
 
+#### Dapatkan data
+```python
+# baca data
+url = "https://raw.githubusercontent.com/dicodingacademy/dicoding_dataset/refs/heads/main/employee/employee_data.csv"
+df = pd.read_csv(url)
+df.head()
 ```
 
 ## Business Dashboard
 
-Jelaskan tentang business dashboard yang telah dibuat. Jika ada, sertakan juga link untuk mengakses dashboard tersebut.
+Jelaskan tentang business dashboard yang telah dibuat. Jika ada, sertakan juga link untuk mengakses dashboard tersebut. http://localhost:3000/public/dashboard/201b5a60-0509-43f1-ab22-4da82f39f5a1
 
 ## Conclusion
 
