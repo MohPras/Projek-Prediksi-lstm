@@ -78,7 +78,9 @@ Masalah ini menjadi perhatian utama departemen Human Resources (HR), yang ingin 
 
 **Data source:** [Employee data](https://github.com/dicodingacademy/dicoding_dataset/tree/main/employee 'Dicoding GitHub - Employee data')
 
-#### Setup environment:
+#### Setup Environment:
+
+**A. Clone Repository**
 
 Ikuti langkah-langkah berikut untuk menjalankan proyek ini di lingkungan lokal Anda:
 
@@ -110,7 +112,7 @@ Ikuti langkah-langkah berikut untuk menjalankan proyek ini di lingkungan lokal A
    pip install -r requirements.txt
    ```
 
-##### Catatan:
+###### Catatan:
 
 * Pastikan Anda sudah menginstal **Python 3.8 atau lebih tinggi**.
 * Gunakan `python` atau `python3` sesuai dengan OS dan pengaturan sistem Anda.
@@ -122,7 +124,9 @@ Ikuti langkah-langkah berikut untuk menjalankan proyek ini di lingkungan lokal A
   pip install -r requirements.txt
   ```
 
-#### Install dan import library
+**B. Akses Dataset**
+
+###### Install dan import library
 ```python
 # install library
 !pip install xgboost
@@ -153,13 +157,48 @@ from sklearn.metrics import ConfusionMatrixDisplay
 sns.set(style='whitegrid')
 ```
 
-#### Dapatkan data
+###### Dapatkan data
 ```python
 # baca data
 url = "https://raw.githubusercontent.com/dicodingacademy/dicoding_dataset/refs/heads/main/employee/employee_data.csv"
 df = pd.read_csv(url)
 df.head()
 ```
+
+**C. Akses Dashboard**
+
+- email “mohammadprastya2023@gmail.com” dan password “123Nurdin”
+
+###### Tutorial Singkat: Membuka Dashboard Metabase dari File Backup
+
+**Prasyarat:**
+Pengguna telah memiliki Java (JRE 8 atau lebih baru) terinstal dan telah mengunduh file `metabase.jar`.
+
+**Langkah-langkah:**
+
+1.  **Hentikan Layanan Metabase (Jika Sedang Berjalan):**
+    * Apabila *instance* Metabase saat ini sedang aktif, harap hentikan prosesnya. Jika dijalankan melalui Command Prompt/Terminal, dapat dihentikan dengan menekan `Ctrl + C`.
+
+2.  **Identifikasi Lokasi Folder Database Metabase:**
+    * Temukan folder `.metabase` yang biasanya terletak di direktori *home* pengguna:
+        * Untuk Windows: `C:\Users\NamaPengguna\.metabase`
+        * Untuk macOS/Linux: `/home/NamaPengguna/.metabase`
+    * (Apabila folder ini belum terbentuk, Anda dapat menjalankan `java -jar metabase.jar` satu kali, lalu hentikan prosesnya, dan folder tersebut akan secara otomatis dibuat.)
+
+3.  **Ganti File Database:**
+    * **Penting:** Harap **memindahkan atau mengganti nama** file `metabase.db.mv.db` dan `metabase.db.trace.db` yang ada di dalam folder `.metabase` tersebut (sebagai langkah pencadangan).
+    * **Salin** kedua file *backup* Anda (`metabase.db.mv.db` dan `metabase.db.trace.db`) ke dalam folder `.metabase` yang telah diidentifikasi. Pastikan nama file tetap sama persis.
+
+4.  **Jalankan Metabase:**
+    * Buka Command Prompt atau Terminal.
+    * Navigasikan ke direktori tempat file `metabase.jar` berada (contoh: `cd C:\Metabase`).
+    * Eksekusi Metabase menggunakan perintah berikut: `java -jar metabase.jar`
+
+5.  **Akses Dashboard:**
+    * Setelah Metabase selesai memuat sepenuhnya, buka peramban web (browser) dan kunjungi alamat: `http://localhost:3000`
+    * Dashboard Metabase Anda seharusnya kini dapat diakses dan menampilkan data dari file *backup* yang telah disalin.
+
+----------------------------------
 
 ## Business Dashboard
 
@@ -235,15 +274,64 @@ Halaman kedua dashboard ini didedikasikan untuk **analisis mendalam mengenai tin
 * ***JobRole* vs *Attrition*:**
     Metrik ini menampilkan **tingkat *attrition* yang dibagi berdasarkan peran pekerjaan (Job Role) karyawan**. Ini adalah metrik yang sangat penting untuk mengidentifikasi peran-peran spesifik yang memiliki tingkat *turnover* tinggi. Dengan demikian, tim HR dapat menyelidiki lebih lanjut masalah yang mungkin ada pada peran-peran tersebut, seperti beban kerja, kompensasi, atau jalur karir yang tidak jelas.
 
----
+----------------------------------
 
 ## Conclusion
 
-Jelaskan konklusi dari proyek yang dikerjakan.
+### Kesimpulan Demografi Karyawan
+
+Dashboard ini menampilkan **879 pekerja aktif** dengan profil demografi yang khas. Mayoritas adalah **laki-laki (58.6%)** dan **sudah menikah (43.86%)**. Dalam hal kualifikasi, sebagian besar karyawan berpendidikan **sarjana (38.75%)**. Pekerja didominasi oleh kelompok **usia 25-34 tahun (37.90%)**, menunjukkan tenaga kerja yang relatif muda. Menariknya, sejumlah besar karyawan, yaitu **325 orang**, telah bekerja di perusahaan selama **6 hingga 10 tahun**, mengindikasikan retensi yang kuat pada segmen karyawan menengah.
+
+### Kesimpulan Analisis *Attrition Rate*
+
+Analisis tingkat *attrition* mengungkap beberapa tren penting yang dapat menjadi dasar strategi retensi. Secara keseluruhan, perusahaan menunjukkan **tingkat retensi karyawan yang relatif baik**, dengan **83% pekerja memilih untuk bertahan**. Meskipun demikian, ada beberapa area yang perlu diperhatikan:
+
+* **Pekerja Muda dan Lajang Paling Rentan:** Karyawan di **usia muda (18-25 tahun)** menunjukkan persentase *attrition* tertinggi **(sekitar 38%)**. Tren serupa terlihat pada pekerja **lajang**, yang memiliki persentase *attrition* paling tinggi **(26.7%)**.
+* **Dampak Buruk dari Lembur dan Keseimbangan Hidup-Kerja:** **Lembur** secara signifikan meningkatkan *attrition* menjadi **31.92%**, jauh lebih tinggi dari mereka yang tidak lembur. Sejalan dengan itu, **keseimbangan hidup-kerja yang "Sangat Buruk"** juga menjadi pemicu *resign*.
+* **Karyawan Baru dan Berpendapatan Rendah Rentan Keluar:** Tingkat *turnover* sangat tinggi pada **karyawan baru (0-2 tahun masa kerja)** dengan *attrition* mencapai **29.96%**. Selain itu, karyawan dengan **pendapatan bulanan kurang dari 3 juta** memiliki persentase *attrition* yang sangat tinggi **(71.33%)**, menunjukkan sensitivitas terhadap kompensasi.
+* **Kepuasan Kerja dan Jarak Tempuh Berperan:** Karyawan dengan **kepuasan kerja "Sangat Tidak Puas"** memiliki tingkat *attrition* yang lebih dari dua kali lipat dibandingkan mereka yang "Sangat Puas." Jarak rumah dari kantor juga menjadi faktor; semakin jauh, semakin tinggi *attrition*, terutama bagi yang tinggal **21+ km dari kantor**.
+* **Peran "Sales Representative" Memiliki Tantangan Retensi:** Posisi **"Sales Representative"** menonjol dengan persentase *attrition* tertinggi **(43.1%)**, mengindikasikan adanya masalah spesifik pada peran ini yang perlu diinvestigasi.
+* **Secara umum, karyawan yang lebih senior (usia 46-55 tahun) dan yang sudah menikah cenderung lebih stabil**.
+
 
 ### Rekomendasi Action Items (Optional)
 
-Berikan beberapa rekomendasi action items yang harus dilakukan perusahaan guna menyelesaikan permasalahan atau mencapai target mereka.
+---
 
-- action item 1
-- action item 2
+## Rekomendasi *Action Items* untuk HR
+
+Berdasarkan kesimpulan demografi karyawan dan analisis tingkat *attrition*, berikut adalah rekomendasi *action items* strategis untuk tim HR:
+
+### Dari Demografi Karyawan:
+
+1.  **Fokus pada Pengembangan Karyawan Muda dan Menengah:**
+    * **Tindakan:** Karena mayoritas karyawan berada di kelompok usia 25-34 tahun dan banyak yang memiliki masa kerja 6-10 tahun, **prioritaskan program pengembangan karier dan kepemimpinan** yang dirancang untuk kelompok ini. Ini akan membantu mereka melihat jalur kemajuan yang jelas di perusahaan dan meningkatkan loyalitas jangka panjang.
+    * **Manfaat:** Memastikan talenta muda dan menengah terus berkembang dan merasa dihargai, mengurangi risiko stagnasi karier.
+
+2.  **Kaji Kebijakan Keberagaman Gender dan Status Perkawinan:**
+    * **Tindakan:** Meskipun mayoritas karyawan adalah laki-laki dan sudah menikah, penting untuk **memastikan kebijakan dan benefit perusahaan mendukung semua *gender* dan status perkawinan**. Lakukan survei *engagement* atau *focus group discussion* untuk memahami kebutuhan spesifik, misalnya, dukungan untuk orang tua baru atau *benefit* yang relevan bagi lajang.
+    * **Manfaat:** Menciptakan lingkungan kerja yang inklusif dan adil untuk semua karyawan, mendukung keberagaman di tempat kerja.
+
+### Dari Analisis *Attrition Rate*:
+
+1.  **Perbaiki Strategi Retensi untuk Karyawan Baru dan Berpendapatan Rendah:**
+    * **Tindakan:** Tingkat *attrition* yang sangat tinggi pada karyawan baru (0-2 tahun) dan mereka dengan pendapatan di bawah 3 juta sangat mengkhawatirkan. **Reviu proses *onboarding* dan *mentoring* untuk karyawan baru** agar mereka merasa lebih terhubung dan didukung. Selain itu, **evaluasi struktur gaji, terutama untuk posisi *entry-level* atau berpendapatan rendah**, untuk memastikan daya saing dan kelayakan hidup.
+    * **Manfaat:** Mengurangi *turnover* di awal masa kerja, meningkatkan investasi pada talenta baru, dan memastikan kompensasi yang adil dan kompetitif.
+
+2.  **Mitigasi Dampak Lembur dan Promosikan Keseimbangan Hidup-Kerja:**
+    * **Tindakan:** Tingkat *attrition* yang tinggi akibat lembur dan keseimbangan hidup-kerja yang buruk menuntut perhatian serius. **Identifikasi departemen atau tim dengan tingkat lembur yang tinggi** dan selidiki akar permasalahannya (misalnya, beban kerja tidak realistis, kekurangan staf). **Terapkan kebijakan yang lebih ketat terkait jam kerja lembur** dan **promosikan inisiatif keseimbangan hidup-kerja** (misalnya, jam kerja fleksibel, hari kesehatan mental, program *wellness*).
+    * **Manfaat:** Meningkatkan kesehatan mental dan fisik karyawan, mengurangi *burnout*, dan meningkatkan kepuasan kerja secara keseluruhan.
+
+3.  **Prioritaskan Dukungan untuk Karyawan Muda dan Lajang:**
+    * **Tindakan:** Kelompok usia 18-25 tahun dan karyawan lajang menunjukkan tingkat *attrition* yang signifikan. **Kembangkan program retensi yang ditargetkan** untuk mereka, seperti peluang pengembangan karier yang jelas, program *networking*, atau inisiatif sosial yang mendukung kebutuhan mereka.
+    * **Manfaat:** Mempertahankan talenta muda yang prospektif dan memastikan karyawan lajang juga merasa memiliki koneksi dan dukungan di tempat kerja.
+
+4.  **Investigasi dan Tingkatkan Kepuasan Kerja serta Lingkungan Kerja:**
+    * **Tindakan:** Tingkat kepuasan kerja yang rendah dan jarak rumah yang jauh berkorelasi dengan *attrition*. **Lakukan survei kepuasan kerja secara berkala** dan tindak lanjuti hasilnya dengan serius. Pertimbangkan **opsi kerja hibrida atau fleksibel** untuk mengurangi beban komuter bagi karyawan yang tinggal jauh.
+    * **Manfaat:** Menciptakan lingkungan kerja yang lebih positif, nyaman, dan mendukung, yang pada akhirnya meningkatkan retensi.
+
+5.  **Perhatian Khusus pada Peran "Sales Representative":**
+    * **Tindakan:** Persentase *attrition* yang sangat tinggi pada *Sales Representative* membutuhkan penyelidikan mendalam. **Lakukan *exit interview* yang komprehensif** untuk memahami alasan kepergian mereka. **Evaluasi kembali beban kerja, target, kompensasi, dan dukungan yang diberikan** kepada peran ini. Pertimbangkan program pelatihan atau *coaching* khusus untuk mengatasi tantangan yang mereka hadapi.
+    * **Manfaat:** Mengurangi *turnover* di posisi kunci, menjaga stabilitas tim penjualan, dan melindungi pendapatan perusahaan.
+
+Rekomendasi ini akan menjadi titik awal yang kuat bagi tim HR untuk menyusun strategi yang lebih terarah dalam mengelola dan mempertahankan talenta terbaik perusahaan.
