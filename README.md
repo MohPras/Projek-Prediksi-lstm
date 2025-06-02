@@ -163,7 +163,7 @@ df.head()
 
 ## Business Dashboard
 
-Jelaskan tentang business dashboard yang telah dibuat. Jika ada, sertakan juga link untuk mengakses dashboard tersebut. http://localhost:3000/public/dashboard/201b5a60-0509-43f1-ab22-4da82f39f5a1
+Jaya Jaya Maju Employees Dashboard adalah bussines dashboard yang didesain sefektif mungkin untuk memberikan insight kepada para manajer departemen HR terkait attrition rate yang cukup tinggi hingga lebih dari 10%.
 
 ## Conclusion
 
