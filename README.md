@@ -163,7 +163,79 @@ df.head()
 
 ## Business Dashboard
 
-Jaya Jaya Maju Employees Dashboard adalah bussines dashboard yang didesain sefektif mungkin untuk memberikan insight kepada para manajer departemen HR terkait attrition rate yang cukup tinggi hingga lebih dari 10%.
+Dashboard Monitoring Employee Jaya Maju adalah bussines dashboard yang didesain sefektif mungkin untuk memberikan insight kepada para manajer departemen HR terkait attrition rate yang cukup tinggi hingga lebih dari 10%. Berikut dibawah ini adalah cuplikan dari sebagian dahboard bussines ini untuk melihat fullnya bisa kunjungi link yaitube ini ( https://www.youtube.com/watch?v=JNU13Fjy1sQ ).
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/dafd5df1-c06d-4529-b4f8-bcab5403974b" alt="Gambar 1: Alur Proyek Sistem Rekomendasi" width="800"/>
+</div>
+
+### Detail Halamana Pertama
+
+Halaman pertama dashboard ini memberikan tinjauan komprehensif tentang **profil karyawan aktif** dan **tren retensi**. Dengan memvisualisasikan data ini, manajemen dapat dengan mudah mengidentifikasi area kekuatan dan potensi masalah terkait sumber daya manusia, seperti distribusi tenaga kerja yang tidak seimbang atau tingkat *resign* yang tinggi. Berikut adalah penjelasan lebih lanjut mengenai setiap metrik yang disajikan pada halaman pertama dashboard Anda:
+
+* **Jumlah Pekerja Aktif:**
+    Metrik ini menunjukkan **total jumlah karyawan yang saat ini aktif** bekerja di perusahaan. Angka ini adalah indikator dasar dari ukuran tenaga kerja Anda dan dapat digunakan untuk melacak pertumbuhan atau penyusutan karyawan dari waktu ke waktu.
+
+* **Distribusi Jumlah Karyawan per Departemen:**
+    Bagian ini menyajikan **visualisasi pembagian karyawan di setiap departemen**. Anda dapat dengan cepat melihat departemen mana yang memiliki karyawan terbanyak atau paling sedikit. Informasi ini krusial untuk perencanaan sumber daya, alokasi anggaran, dan identifikasi potensi kelebihan atau kekurangan staf di area tertentu.
+
+* **Jumlah Karyawan *Resign* dan *Stay*:**
+    Metrik ini membandingkan **jumlah karyawan yang keluar (*resign*) dengan karyawan yang masih bertahan (*stay*)** dalam periode tertentu. Ini adalah indikator penting untuk kesehatan organisasi dan tingkat retensi karyawan. Tingkat *resign* yang tinggi mungkin menunjukkan masalah dengan kepuasan karyawan, budaya perusahaan, atau kompensasi.
+
+* **Distribusi Jumlah Karyawan Berdasarkan *Gender*:**
+    Diagram ini menampilkan **proporsi karyawan berdasarkan jenis kelamin**. Data ini penting untuk memastikan keberagaman dan kesetaraan gender di tempat kerja, serta untuk mematuhi regulasi terkait keberagaman.
+
+* **Total Karyawan Berdasarkan Pendidikan:**
+    Metrik ini mengelompokkan **jumlah karyawan berdasarkan tingkat pendidikan terakhir mereka**. Informasi ini berguna untuk memahami kualifikasi umum tenaga kerja Anda dan mengidentifikasi kesenjangan keterampilan yang mungkin memerlukan program pelatihan atau rekrutmen khusus.
+
+* **Total Pekerja Berdasarkan Usia:**
+    Bagian ini menunjukkan **distribusi karyawan berdasarkan kelompok usia**. Data ini penting untuk perencanaan suksesi, memahami dinamika tim antar-generasi, dan merancang tunjangan atau program kesehatan yang sesuai dengan demografi usia karyawan.
+
+* **Jumlah Karyawan Berdasarkan Lama Bekerja di Perusahaan (*Tenure*):**
+    Metrik ini mengkategorikan **karyawan berdasarkan durasi mereka bekerja di perusahaan** (misalnya, <1 tahun, 1-3 tahun, 3-5 tahun, >5 tahun). Informasi ini membantu mengidentifikasi tren *turnover* pada periode tertentu dan memahami seberapa lama karyawan cenderung bertahan di perusahaan. Angka *tenure* yang rendah, terutama di awal, bisa menjadi sinyal adanya masalah dalam proses *onboarding* atau kepuasan kerja awal.
+
+<div align="center">
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/98e3cb70-3c0a-440e-ae43-26d96fbe3f1f" />
+</div>
+
+### Detail Halamana Kedua
+
+Halaman kedua dashboard ini didedikasikan untuk **analisis mendalam mengenai tingkat *attrition* (pergantian karyawan)**. Tujuan utama dari halaman ini adalah untuk mengidentifikasi faktor-faktor pendorong di balik keputusan karyawan untuk *resign*, sehingga perusahaan dapat mengembangkan strategi retensi yang lebih efektif dan proaktif. Dengan memahami "mengapa" karyawan pergi, kita bisa mengambil langkah-langkah untuk mengurangi *turnover* yang tidak diinginkan dan mempertahankan talenta terbaik. Berikut adalah penjelasan setiap metrik penting yang disajikan pada halaman kedua dashboard Anda:
+
+* **Pekerja Aktif vs Keluar:**
+    Grafik ini memberikan perbandingan langsung antara **jumlah karyawan yang saat ini aktif** dengan **jumlah karyawan yang telah keluar** dalam periode waktu tertentu. Ini adalah titik awal untuk memahami skala *attrition* secara keseluruhan di perusahaan Anda.
+
+* ***Gender* vs *Attrition*:**
+    Analisis ini menampilkan **tingkat *attrition* yang terbagi berdasarkan jenis kelamin karyawan**. Dengan metrik ini, kita bisa melihat apakah ada disparitas signifikan dalam tingkat *resign* antara karyawan pria dan wanita. Perbedaan yang mencolok mungkin mengindikasikan isu-isu terkait kesetaraan atau lingkungan kerja yang mempengaruhi satu *gender* lebih dari yang lain.
+
+* ***Age* vs *Attrition*:**
+    Visualisasi ini mengamati **bagaimana tingkat *attrition* bervariasi di berbagai kelompok usia karyawan**. Penting untuk mengidentifikasi apakah karyawan muda, paruh baya, atau senior lebih rentan untuk *resign*. Misalnya, *attrition* tinggi di kelompok usia muda mungkin menunjukkan masalah dengan peluang pengembangan karir atau budaya perusahaan, sementara *attrition* di usia senior mungkin berkaitan dengan masalah pensiun atau transisi karir.
+
+* ***Marital Status* vs *Attrition*:**
+    Metrik ini menganalisis **hubungan antara status perkawinan karyawan (misalnya, lajang, menikah, cerai) dengan tingkat *attrition***. Terkadang, perubahan status perkawinan dapat memengaruhi prioritas atau kebutuhan karyawan, yang pada gilirannya bisa memengaruhi keputusan mereka untuk bertahan di perusahaan.
+
+* ***OverTime* vs *Attrition*:**
+    Bagian ini mengeksplorasi **dampak dari jam kerja lembur (*overtime*) terhadap tingkat *attrition***. Karyawan yang sering atau selalu lembur mungkin mengalami *burnout* atau ketidakseimbangan kehidupan-kerja, yang dapat mendorong mereka untuk mencari peluang lain. Metrik ini membantu mengidentifikasi apakah jam kerja berlebihan menjadi pemicu *resign*.
+
+* ***YearsAtCompany* vs *Attrition*:**
+    Analisis ini menunjukkan **hubungan antara lamanya karyawan bekerja di perusahaan (*tenure*) dengan kemungkinan mereka untuk *resign***. Dengan metrik ini, kita dapat melihat pada titik *tenure* mana karyawan cenderung paling sering keluar. Misalnya, tingkat *attrition* yang tinggi pada tahun-tahun awal mungkin menandakan masalah dengan proses *onboarding* atau harapan kerja yang tidak terpenuhi.
+
+* ***TotalWorkingYears* vs *Attrition*:**
+    Berbeda dengan *YearsAtCompany*, metrik ini melihat **pengaruh total pengalaman kerja karyawan (tidak hanya di perusahaan saat ini) terhadap *attrition***. Ini bisa membantu memahami apakah karyawan dengan pengalaman kerja yang sangat sedikit atau sangat banyak memiliki kecenderungan *attrition* yang berbeda, yang mungkin terkait dengan tujuan karir atau ekspektasi mereka.
+
+* ***WorkLifeBalance* vs *Attrition*:**
+    Metrik ini menyajikan **korelasi antara persepsi karyawan tentang keseimbangan kehidupan-kerja mereka dengan tingkat *attrition***. Keseimbangan yang buruk adalah pemicu *resign* yang umum. Data ini dapat menyoroti pentingnya kebijakan dan program yang mendukung *work-life balance*.
+
+* ***JobSatisfaction* vs *Attrition*:**
+    Analisis ini menunjukkan **hubungan antara tingkat kepuasan kerja karyawan dengan keputusan mereka untuk *resign***. Secara intuitif, karyawan yang tidak puas dengan pekerjaan mereka cenderung lebih mungkin untuk pergi. Metrik ini dapat membantu mengidentifikasi departemen atau peran di mana kepuasan kerja rendah dan menjadi faktor *attrition*.
+
+* ***DistanceFromHome* vs *Attrition*:**
+    Bagian ini mengkaji **bagaimana jarak antara rumah karyawan dan kantor memengaruhi tingkat *attrition***. Jarak tempuh yang sangat jauh atau biaya transportasi yang tinggi bisa menjadi beban bagi karyawan, terutama jika ada pilihan pekerjaan yang lebih dekat.
+
+* ***JobRole* vs *Attrition*:**
+    Metrik ini menampilkan **tingkat *attrition* yang dibagi berdasarkan peran pekerjaan (Job Role) karyawan**. Ini adalah metrik yang sangat penting untuk mengidentifikasi peran-peran spesifik yang memiliki tingkat *turnover* tinggi. Dengan demikian, tim HR dapat menyelidiki lebih lanjut masalah yang mungkin ada pada peran-peran tersebut, seperti beban kerja, kompensasi, atau jalur karir yang tidak jelas.
+
+---
 
 ## Conclusion
 
