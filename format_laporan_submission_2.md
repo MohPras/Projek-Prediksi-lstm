@@ -113,7 +113,7 @@ Dataset ini sudah cukup bersih dan tidak memiliki banyak nilai kosong. Namun, te
 
 ### Eksplorasi Data & Visualisasi Data
 Beberapa langkah exploratory data analysis (EDA) dilakukan untuk memahami distribusi dan hubungan antar fitur dan dibawah ini adalah resmue dari beberapa tahapan yang sudah dilakukan. kode dibawah ini adalah kode untuk membuat resum pada analisis eda yang sudah dilakukan, disarankan untuk melihat code keseluruhan pada file ipynb agar tidak terjadi eror. Berikut ini kodenya:
-```
+```python
 # Ringkasan jumlah entitas
 summary_df = pd.DataFrame ({
     "Kategori": [
@@ -182,7 +182,7 @@ Tahapan data preparation merupakan langkah penting dalam membangun sistem rekome
 Berikut adalah langkah-langkah data preparation yang dilakukan, sesuai urutan dalam notebook:
 1. Import library
 Pada tahap awal, dilakukan import berbagai library yang dibutuhkan seperti ```pandas, numpy, matplotlib, seaborn, sklearn```, dan beberapa modul dari keras serta ```tensorflow```. Library ini digunakan untuk manipulasi data, visualisasi, dan perhitungan similarity. Meskipun library seperti ResNet50 dan ```keras.layers diimpor```, tidak semua digunakan dalam proses content-based filtering, kemungkinan dipersiapkan untuk eksperimen lanjutan. Alasan Menyediakan semua tools yang diperlukan untuk data cleaning, analisis, dan model building.
-```
+```python
 # Import libraries
 import tensorflow as tf
 from tensorflow import keras
@@ -204,22 +204,22 @@ pd.set_option('display.max_colwidth', 50)
 ```
 2. Data loaading dataset
 Dataset diunduh langsung dari GitHub dalam format CSV yang berisi data lagu Spotify. Setelah itu, data dibaca menggunakan ```pd.read_csv()``` dan ditampilkan beberapa baris awal dengan .```head()``` serta dilihat ukuran datanya dengan ```.shape()```. Alasan memastikan data berhasil dimuat dan memahami struktur serta ukuran data awal yang akan digunakan.
-```
+```python
 # dwonload data
 url = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv"
 data = pd.read_csv(url)
 ```
-```
+```python
 # baca data
 data.head()
 ```
-```
+```python
 # lihat jumlah data
 print(data.shape)
 ```
 3. Cek informasi dataset
 Data diperiksa menggunakan ```.info()``` untuk mengetahui jumlah kolom, tipe data, dan nilai non-null. Selain itu, digunakan juga ```.describe()``` untuk mendapatkan ringkasan statistik seperti mean, min, dan max dari fitur numerik. Alasan untuk mengenali karakteristik data, melihat potensi anomali, serta mengidentifikasi apakah data memiliki tipe atau nilai yang perlu diubah.
-```
+```python
 # cek info dataset
 df.info()
 # analisis statistik deskriptif
@@ -227,20 +227,111 @@ df.describe()
 ```
 4. Cek missing value
 Diperiksa jumlah missing value pada setiap kolom menggunakan ```.isna().sum()```. Data yang memiliki nilai kosong pada kolom penting seperti track_name, ```track_artist```, dan ```track_album_name``` dihapus menggunakan ```.dropna()```. Alasan data tersebut penting dalam sistem rekomendasi berbasis konten. Jika tidak lengkap, akan mengganggu akurasi perhitungan kemiripan antar lagu.
-```
+```python
 # cek missing value
 print(df.isna().sum())
 ```
-```
+```python
 # Hapus missing value
 df.dropna(subset=['track_name', 'track_artist', 'track_album_name'], inplace=True)
 print(df.isnull().sum())
 ```
 6. Cek duplikasi data
 Duplikasi dicek menggunakan ```.duplicated().sum()``` untuk mengetahui apakah ada entri lagu yang muncul lebih dari sekali. Alasan duplikasi dapat menyebabkan bias pada sistem rekomendasi karena satu lagu bisa lebih diunggulkan tanpa alasan jelas, sehingga perlu dihindari.
-```
+```python
 # cek duplikasi data
 print('Duplikasi data ada: ', df.duplicated().sum())
+```
+7. Pengambilan Sampel Data
+Pengambilan sampel dilakukan menggunakan `.sample(n=1500)` untuk memilih 1500 baris data secara acak dari dataset asli guna efisiensi proses eksplorasi dan pelatihan awal.
+```python
+# pengambilan sampel data sebanyak 1500 baris
+df_sample = df.sample(n=1500, random_state=42)
+```
+8. Transformasi Fitur Durasi ke Satuan Menit
+Fitur `duration_ms` yang semula dalam satuan milidetik diubah menjadi satuan menit agar lebih mudah dibaca dan dianalisis. Transformasi ini dilakukan dengan membagi nilai `duration_ms` dengan 60.000 (karena 1 menit = 60.000 milidetik), lalu disimpan ke kolom baru `duration_min` dalam dataframe `cbf_df`. Transformasi ini membantu dalam visualisasi dan interpretasi durasi lagu, serta dapat digunakan untuk analisis distribusi atau pengelompokan berdasarkan panjang lagu.
+```python
+# transformasi durasi dari milidetik ke menit
+cbf_df['duration_min'] = cbf_df['duration_ms'] / 60000
+cbf_df[['track_name', 'duration_ms', 'duration_min']].head()
+```
+9. Pembuatan Fitur-Fitur Baru (Feature Engineering)
+Dilakukan proses rekayasa fitur untuk mengubah fitur numerik menjadi fitur kategorikal yang lebih interpretatif dan mendukung analisis berbasis konten. Beberapa fitur yang dibuat antara lain:
+- duration_label: Kategori durasi lagu (pendek, sedang, panjang) berdasarkan nilai duration_min.
+- energy_level: Kategori tingkat energi lagu (rendah, sedang, tinggi) berdasarkan nilai energy.
+- danceability_level: Kategori tingkat keterdansaan lagu (rendah, sedang, tinggi) berdasarkan nilai danceability.
+Kategorisasi dilakukan menggunakan aturan berbasis threshold sederhana (misalnya menggunakan pd.cut atau logika kondisional), agar fitur numerik menjadi representasi kategorikal yang mudah dikelompokkan dan dibandingkan antar lagu.
+Berikut penjelasan yang kamu minta, dengan gaya yang konsisten seperti bagian-bagian sebelumnya:
+
+10. Pembuatan Fitur Gabungan (`combined_features`) untuk Representasi Teks
+Untuk mendukung pendekatan Content-Based Filtering berbasis teks, beberapa fitur kategorikal yang merepresentasikan karakteristik lagu digabungkan menjadi satu kolom teks. Fitur ini diberi nama `combined_features`, dan menjadi **input utama untuk proses ekstraksi vektor menggunakan TF-IDF**.
+Fitur-fitur yang digabung meliputi:
+
+* `track_name`
+* `track_artist`
+* `playlist_genre`
+* `playlist_subgenre`
+* `duration_label`
+* `energy_level`
+* `danceability_level`
+
+Gabungan ini membentuk deskripsi semu setiap lagu, sehingga TF-IDF dapat mengenali kemiripan antar lagu berdasarkan konten.
+
+```python
+# gabungkan beberapa fitur kategorikal menjadi satu kolom teks
+cbf_df['combined_features'] = (
+    cbf_df['track_name'] + ' ' +
+    cbf_df['track_artist'] + ' ' +
+    cbf_df['playlist_genre'] + ' ' +
+    cbf_df['playlist_subgenre'] + ' ' +
+    cbf_df['duration_label'] + ' ' +
+    cbf_df['energy_level'] + ' ' +
+    cbf_df['danceability_level']
+)
+```
+Fitur `combined_features` ini kemudian akan diproses lebih lanjut dengan TF-IDF Vectorizer untuk menghitung kemiripan antar lagu secara otomatis berdasarkan deskripsi kontennya.
+
+11. Seleksi Fitur untuk Content-Based Filtering
+Dilakukan seleksi fitur yang relevan untuk model Content-Based Filtering, yaitu kombinasi fitur numerik dan kategorikal yang mewakili karakteristik lagu. Fitur ini disimpan dalam variabel `cbf_features`, lalu dibuat dataframe `cbf_df` sebagai basis analisis kemiripan.
+```python
+# seleksi fitur untuk content-based filtering
+cbf_data = cbf_df[['track_id', 'track_name', 'track_artist', 'playlist_genre', 'playlist_subgenre', 'duration_label', 'energy_level', 'danceability_level', 'combined_features']]
+cbf_data.head()
+```
+12. Ekstraksi Fitur Teks dengan TF-IDF
+Dilakukan proses ekstraksi fitur teks dari kolom `combined_features` menggunakan **TF-IDF Vectorizer** untuk merepresentasikan setiap lagu sebagai vektor numerik berbasis konten.
+
+Langkah-langkah utama:
+
+* **Inisialisasi dan fitting** `TfidfVectorizer` ke kolom `combined_features`.
+* **Transformasi ke matriks TF-IDF** untuk menghitung bobot kata-kata penting.
+* **Konversi ke bentuk matriks dense** dan simpan sebagai dataframe `df_tfidf` dengan `track_name` sebagai indeks.
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# inisialisasi dan fit vectorizer
+vectorizer = TfidfVectorizer(stop_words='english', max_df=0.95, min_df=2)
+tfidf_matrix = vectorizer.fit_transform(cbf_data['combined_features'])
+
+# ubah ke bentuk dense dan simpan sebagai DataFrame
+dense_matrix = tfidf_matrix.todense()
+df_tfidf = pd.DataFrame(
+    dense_matrix,
+    columns=vectorizer.get_feature_names_out(),
+    index=cbf_data['track_name']
+)
+```
+13. Perhitungan Kemiripan Lagu dengan Cosine Similarity
+Kemiripan antar lagu dihitung menggunakan **Cosine Similarity** berdasarkan hasil vektorisasi TF-IDF. Fungsi `cosine_similarity` dari `sklearn` digunakan untuk menghasilkan matriks kemiripan antar semua lagu. Matriks `cosine_sim` ini menjadi dasar untuk memberikan rekomendasi lagu berdasarkan kemiripan kontennya.
+```python
+from sklearn.metrics.pairwise import cosine_similarity
+
+# hitung cosine similarity dari tf-idf matrix
+cosine_sim = cosine_similarity(tfidf_matrix)
+
+# cek ukuran matriks hasil
+print(cosine_sim.shape)
 ```
 
 ----------------------------------------------------
