@@ -32,27 +32,14 @@ Dalam ekosistem platform streaming musik seperti Spotify, pengguna seringkali me
 
 Masalah utama yang ingin diselesaikan dalam proyek ini adalah:
 1. Bagaimana membangun sistem yang mampu merekomendasikan lagu-lagu yang relevan bagi pengguna berdasarkan lagu yang mereka sukai?
-2. Bagaimana mengukur seberapa baik sistem rekomendasi yang dibangun dalam menyajikan hasil yang relevan dan akurat?
-3. Berapa total jumlah playlist ID yang tersedia?
-4. Berapa banyak lagu unik yang terdapat dalam dataset?
-5. Lagu mana yang paling sering muncul dalam playlist?
-6. Lagu mana yang paling jarang muncul dalam playlist?
-7. Berapa total nama lagu yang tercatat?
-8. Lagu apa yang paling populer di Spotify berdasarkan data ini?
-9. Berapa jumlah playlist unik yang ada?
-10. Berapa banyak genre utama yang ditemukan?
-11. Berapa banyak subgenre yang terdapat dalam dataset?
-12. Genre apa yang paling sering muncul?
-13. Subgenre apa yang paling sering muncul?
-14. Siapa artis dengan jumlah lagu paling banyak didengar?
-15. Lagu mana yang memiliki durasi paling panjang?
-16. Lagu mana yang memiliki durasi paling pendek?
+2. Bagaimana memahami struktur dan karakteristik dataset yang tersedia (playlist, lagu, genre, durasi, popularitas, dll.) untuk mendukung pengembangan sistem rekomendasi?
+3. Bagaimana cara untuk mendapatkan rekomendasi lagu Top-N recomendation?
 
 ### Goals
 Tujuan dari proyek ini adalah:
 1. Mengembangkan sistem rekomendasi musik yang mampu memberikan daftar rekomendasi lagu berdasarkan input lagu tertentu seperti id musik, genre dan keyword nama lagu.
-2. Mengimplementasikan pendekatan Content-Based Filtering untuk menghasilkan Top-N recommendation yang akurat.
-3. Melakukan eksplorasi data untuk menjawab pertanyaan dari point masalah utama nomer 3 sampai 16.
+2. Melakukan eksplorasi dan analisis data untuk memahami karakteristik playlist, lagu, genre, artis, dan fitur lain yang mendukung pembangunan sistem rekomendasi.
+3. Mengimplementasikan pendekatan Content-Based Filtering untuk menghasilkan Top-N recommendation yang akurat.
 
 ### Solution statements
 Untuk mencapai tujuan tersebut dipilih satu pendekatan utama dalam pengembangan sistem rekomendasi musik di spotify yaitu:
@@ -80,17 +67,48 @@ Dataset ini berisi data lagu-lagu dari Spotify Top 2000 berdasarkan tangga lagu 
 Informasi Umum Dataset
 1. Jumlah baris (lagu): 32.833 lagu
 2. Jumlah kolom (fitur): 23 fitur
+
+Berikut adalah tabel berisi 23 fitur dari dataset spotify_songs.csv lengkap dengan deskripsi singkat masing-masing fitur:
+| No. | Nama Fitur                 | Tipe Data | Deskripsi                                                          |
+| --- | -------------------------- | --------- | ------------------------------------------------------------------ |
+| 1   | `track_id`                 | object    | ID unik untuk setiap lagu (track) di Spotify.                      |
+| 2   | `track_name`               | object    | Nama lagu.                                                         |
+| 3   | `track_artist`             | object    | Nama artis yang membawakan lagu.                                   |
+| 4   | `track_popularity`         | int64     | Skor popularitas lagu di Spotify (0-100).                          |
+| 5   | `track_album_id`           | object    | ID unik dari album tempat lagu berada.                             |
+| 6   | `track_album_name`         | object    | Nama album tempat lagu dirilis.                                    |
+| 7   | `track_album_release_date` | object    | Tanggal rilis album.                                               |
+| 8   | `playlist_name`            | object    | Nama playlist tempat lagu berada.                                  |
+| 9   | `playlist_id`              | object    | ID unik dari playlist.                                             |
+| 10  | `playlist_genre`           | object    | Genre utama dari playlist.                                         |
+| 11  | `playlist_subgenre`        | object    | Subgenre atau genre yang lebih spesifik dari playlist.             |
+| 12  | `danceability`             | float64   | Seberapa cocok lagu untuk menari (0-1).                            |
+| 13  | `energy`                   | float64   | Intensitas dan aktivitas lagu (0-1).                               |
+| 14  | `key`                      | int64     | Nada dasar lagu, direpresentasikan dalam bentuk integer (0–11).    |
+| 15  | `loudness`                 | float64   | Tingkat kekerasan suara lagu dalam desibel (dB).                   |
+| 16  | `mode`                     | int64     | Modus musik: mayor (1) atau minor (0).                             |
+| 17  | `speechiness`              | float64   | Ukuran seberapa banyak elemen lirik atau suara manusia dalam lagu. |
+| 18  | `acousticness`             | float64   | Tingkat keakustikan lagu (0-1).                                    |
+| 19  | `instrumentalness`         | float64   | Kemungkinan lagu tidak mengandung vokal (0-1).                     |
+| 20  | `liveness`                 | float64   | Indikasi apakah lagu direkam secara live (0-1).                    |
+| 21  | `valence`                  | float64   | Positif atau cerianya lagu secara musikal (0-1).                   |
+| 22  | `tempo`                    | float64   | Kecepatan lagu dalam beat per minute (BPM).                        |
+| 23  | `duration_ms`              | int64     | Durasi lagu dalam milidetik.                                       |
+
    
-Pada proyek ini kolom yang digunakan sebagai berikut:
-- **track\_id** – ID unik untuk tiap lagu
-- **track\_name** – Nama lagu
-- **track\_artist** – Nama artis penyanyi
-- **playlist\_genre** – Genre utama playlist
-- **playlist\_subgenre** – Subgenre dari playlist
-- **duration\_label** – Kategori durasi lagu (mis. pendek/sedang/panjang)
-- **energy\_level** – Tingkat energi lagu (rendah hingga tinggi)
-- **danceability\_level** – Tingkat kemudahan untuk berdansa
-- **combined\_features** – Gabungan fitur numerik untuk analisis
+Berikut adalah versi dalam bentuk tabel untuk bagian "kolom yang digunakan" dalam proyek ini, lengkap dengan deskripsi singkat masing-masing kolom:
+| No. | Nama Kolom           | Deskripsi                                                                 |
+| --- | -------------------- | ------------------------------------------------------------------------- |
+| 1   | `track_id`           | ID unik untuk tiap lagu.                                                  |
+| 2   | `track_name`         | Nama lagu.                                                                |
+| 3   | `track_artist`       | Nama artis atau penyanyi lagu.                                            |
+| 4   | `playlist_genre`     | Genre utama dari playlist tempat lagu berada.                             |
+| 5   | `playlist_subgenre`  | Subgenre yang lebih spesifik dari playlist.                               |
+| 6   | `duration_label`     | Kategori durasi lagu (misalnya: pendek, sedang, panjang).                 |
+| 7   | `energy_level`       | Kategori tingkat energi lagu (dari rendah hingga tinggi).                 |
+| 8   | `danceability_level` | Kategori tingkat kemudahan lagu untuk didansa.                            |
+| 9   | `combined_features`  | Gabungan berbagai fitur numerik untuk keperluan analisis dan rekomendasi. |
+
 Dataset ini sudah cukup bersih dan tidak memiliki banyak nilai kosong. Namun, tetap dilakukan pemeriksaan dan eksplorasi untuk memastikan kualitas data.
 
 ### Eksplorasi Data & Visualisasi Data
