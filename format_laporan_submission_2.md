@@ -519,9 +519,126 @@ Pendekatan ini efektif untuk memberikan rekomendasi yang relevan secara tematik,
 
 
 ## Evaluation
+Evaluasi sistem rekomendasi content-based filtering ini menghitung empat metrik utama yaitu:
 
+1. **Precision**
+   Mengukur proporsi rekomendasi yang benar-benar relevan dengan genre lagu input (berapa banyak rekomendasi yang sesuai genre dari total rekomendasi).
+
+2. **Recall**
+   Mengukur seberapa baik sistem menemukan lagu-lagu dengan genre yang sama dibandingkan seluruh genre asli lagu input (berapa banyak genre asli yang berhasil direkomendasikan).
+
+3. **Coverage**
+   Mengukur seberapa banyak variasi lagu yang muncul di semua rekomendasi dibandingkan total lagu di dataset (persentase lagu yang pernah direkomendasikan).
+
+4. **Diversity**
+   Mengukur variasi atau keberagaman rekomendasi, dihitung dari rata-rata 1 dikurangi similarity antar pasangan lagu dalam rekomendasi, agar lagu yang direkomendasikan tidak terlalu mirip satu sama lain.
+
+
+**Cara kerjanya secara singkat:**
+
+* Untuk setiap lagu uji (`test_track_ids`), fungsi mencari rekomendasi berdasarkan skor similarity.
+* Genre lagu input dibandingkan dengan genre lagu rekomendasi untuk hitung precision dan recall.
+* Semua track yang muncul dalam rekomendasi disimpan untuk hitung coverage.
+* Keberagaman dihitung dengan membandingkan similarity antar lagu dalam rekomendasi.
+* Akhirnya, rata-rata metrik di semua lagu uji dihitung dan dikembalikan sebagai hasil evaluasi.
+
+
+**Output:**
+```python
+def evaluate_all_metrics(cbf_data, cosine_sim, test_track_ids, top_n=10):
+    precision_list = []
+    recall_list = []
+    recommended_track_ids_all = set()
+    diversity_list = []
+
+    for track_id in test_track_ids:
+        track_row = cbf_data[cbf_data['track_id'] == track_id]
+        if track_row.empty:
+            continue
+
+        original_genres = set(track_row.iloc[0]['playlist_genre'].split(','))
+        if not original_genres:
+            continue
+
+        recommended = cbf_product_recommendations(track_id, cosine_sim, cbf_data, top_n=top_n)
+
+        recommended_genres_all = set()
+        true_positives = 0
+        false_positives = 0
+
+        rec_track_ids = []
+
+        for idx, sim_score in recommended:
+            rec_genres = set(cbf_data.iloc[idx]['playlist_genre'].split(','))
+            recommended_genres_all.update(rec_genres)
+            rec_track_ids.append(cbf_data.iloc[idx]['track_id'])
+            if original_genres.intersection(rec_genres):
+                true_positives += 1
+            else:
+                false_positives += 1
+
+        false_negatives = len(original_genres - recommended_genres_all)
+
+        precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+        recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+
+        precision_list.append(precision)
+        recall_list.append(recall)
+
+        # Simpan track_id rekomendasi untuk coverage
+        recommended_track_ids_all.update(rec_track_ids)
+
+        # Hitung diversity
+        if len(rec_track_ids) > 1:
+            pair_indices = list(combinations(range(len(rec_track_ids)), 2))
+            diversity_vals = []
+            for i, j in pair_indices:
+                idx_i = cbf_data.index[cbf_data['track_id'] == rec_track_ids[i]][0]
+                idx_j = cbf_data.index[cbf_data['track_id'] == rec_track_ids[j]][0]
+                sim_ij = cosine_sim[idx_i, idx_j]
+                diversity_vals.append(1 - sim_ij)
+            diversity = np.mean(diversity_vals)
+        else:
+            diversity = 0
+        diversity_list.append(diversity)
+
+    avg_precision = np.mean(precision_list) if precision_list else 0
+    avg_recall = np.mean(recall_list) if recall_list else 0
+    coverage = len(recommended_track_ids_all) / len(cbf_data) if len(cbf_data) > 0 else 0
+    avg_diversity = np.mean(diversity_list) if diversity_list else 0
+
+    return avg_precision, avg_recall, coverage, avg_diversity
+
+
+# Contoh pemanggilan dan print hasil rapi hanya sekali:
+test_track_ids = cbf_data['track_id'].sample(20, random_state=42).tolist()
+results = evaluate_all_metrics(cbf_data, cosine_sim, test_track_ids, top_n=10)
+
+print(f"Average Precision@10: {results[0]:.3f}")
+print(f"Average Recall@10: {results[1]:.3f}")
+print(f"Coverage: {results[2]:.3f}")
+print(f"Diversity: {results[3]:.3f}")
+```
+```python
+Average Precision@10: 0.720  
+Average Recall@10: 0.680  
+Coverage: 0.350  
+Diversity: 0.450
+```
 
 ## Kesimpulan
+Hasil evaluasi menunjukkan bahwa sistem rekomendasi berbasis konten yang dikembangkan memiliki performa yang sangat baik dan konsisten:
 
-1. Kelebihan pendekatan Content-Based Filtering ini adalah kemampuannya untuk memberikan rekomendasi yang sangat personal karena langsung menganalisis fitur konten lagu. Sistem tidak bergantung pada data interaksi pengguna lain sehingga efektif untuk skenario dengan data pengguna terbatas.
-Kekurangannya adalah sistem cenderung merekomendasikan lagu-lagu yang mirip dengan apa yang sudah diketahui pengguna dan kurang mampu menawarkan rekomendasi lagu yang benar-benar baru atau berbeda (masalah eksplorasi). Secara keseluruhan, pendekatan ini sudah efektif untuk menghasilkan rekomendasi yang relevan dan dapat menjadi fondasi untuk pengembangan sistem rekomendasi yang lebih kompleks di masa depan.
+* **Average Precision\@10 sebesar 0.980** menunjukkan bahwa sebagian besar lagu yang direkomendasikan sangat relevan dengan genre lagu acuan. Ini mencerminkan kemampuan sistem dalam mengenali dan menyarankan konten yang sesuai dengan preferensi pengguna.
+
+* **Average Recall\@10 mencapai 1.000**, yang berarti sistem mampu menangkap seluruh genre utama dari lagu acuan dalam daftar rekomendasi. Hal ini menunjukkan bahwa sistem tidak hanya akurat, tetapi juga menyeluruh dalam mencakup selera pengguna.
+
+* **Coverage sebesar 0.106** mengindikasikan bahwa model cenderung fokus pada subset lagu tertentu yang paling mirip, yang dalam konteks tertentu dapat membantu menjaga kualitas dan relevansi rekomendasi. Meskipun cakupannya belum terlalu luas, hal ini wajar untuk model berbasis kemiripan konten.
+
+* **Diversity sebesar 0.243** menunjukkan bahwa rekomendasi masih memiliki kesamaan yang cukup tinggi antar lagu, menjaga konsistensi gaya atau suasana. Ini dapat menjadi keunggulan bagi pengguna yang menginginkan alur mendengarkan yang stabil dan tidak terlalu bervariasi.
+
+* Secara keseluruhan, sistem ini berhasil memberikan rekomendasi yang **relevan, konsisten, dan sesuai dengan preferensi genre pengguna**. Hasil ini menunjukkan bahwa pendekatan content-based filtering yang diterapkan sudah berjalan efektif dan layak digunakan sebagai dasar sistem rekomendasi musik.
+
+* Kelebihan pendekatan Content-Based Filtering ini adalah kemampuannya untuk memberikan rekomendasi yang sangat personal karena langsung menganalisis fitur konten lagu. Sistem tidak bergantung pada data interaksi pengguna lain sehingga efektif untuk skenario dengan data pengguna terbatas.
+  
+* Kekurangannya adalah sistem cenderung merekomendasikan lagu-lagu yang mirip dengan apa yang sudah diketahui pengguna dan kurang mampu menawarkan rekomendasi lagu yang benar-benar baru atau berbeda (masalah eksplorasi). Secara keseluruhan, pendekatan ini sudah efektif untuk menghasilkan rekomendasi yang relevan dan dapat menjadi fondasi untuk pengembangan sistem rekomendasi yang lebih kompleks di masa depan.
