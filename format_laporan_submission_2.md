@@ -620,13 +620,11 @@ print(f"Coverage: {results[2]:.3f}")
 print(f"Diversity: {results[3]:.3f}")
 ```
 ```python
-Average Precision@10: 0.720  
-Average Recall@10: 0.680  
-Coverage: 0.350  
-Diversity: 0.450
+Average Precision@10: 0.980
+Average Recall@10: 1.000
+Coverage: 0.106
+Diversity: 0.243
 ```
-
-## Kesimpulan
 Hasil evaluasi menunjukkan bahwa sistem rekomendasi berbasis konten yang dikembangkan memiliki performa yang sangat baik dan konsisten:
 
 * **Average Precision\@10 sebesar 0.980** menunjukkan bahwa sebagian besar lagu yang direkomendasikan sangat relevan dengan genre lagu acuan. Ini mencerminkan kemampuan sistem dalam mengenali dan menyarankan konten yang sesuai dengan preferensi pengguna.
@@ -637,7 +635,9 @@ Hasil evaluasi menunjukkan bahwa sistem rekomendasi berbasis konten yang dikemba
 
 * **Diversity sebesar 0.243** menunjukkan bahwa rekomendasi masih memiliki kesamaan yang cukup tinggi antar lagu, menjaga konsistensi gaya atau suasana. Ini dapat menjadi keunggulan bagi pengguna yang menginginkan alur mendengarkan yang stabil dan tidak terlalu bervariasi.
 
-* Secara keseluruhan, sistem ini berhasil memberikan rekomendasi yang **relevan, konsisten, dan sesuai dengan preferensi genre pengguna**. Hasil ini menunjukkan bahwa pendekatan content-based filtering yang diterapkan sudah berjalan efektif dan layak digunakan sebagai dasar sistem rekomendasi musik.
+## Kesimpulan
+
+* Secara keseluruhan, sistem ini berhasil memberikan rekomendasi yang **relevan, konsisten, dan sesuai dengan preferensi pengguna** hal itu bisa dilihat pada proses evaluasi dimana sistem rekomendasi memiliki performa yang sangat baik dan konsisten. Hasil ini menunjukkan bahwa pendekatan content-based filtering yang diterapkan sudah berjalan efektif dan layak digunakan sebagai dasar sistem rekomendasi musik.
 
 * Kelebihan pendekatan Content-Based Filtering ini adalah kemampuannya untuk memberikan rekomendasi yang sangat personal karena langsung menganalisis fitur konten lagu. Sistem tidak bergantung pada data interaksi pengguna lain sehingga efektif untuk skenario dengan data pengguna terbatas.
   
