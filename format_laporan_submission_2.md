@@ -181,28 +181,34 @@ Hasil dari kode diatas akan menampilkan statistik deskriptif seperti dibawah ini
 Tahapan data preparation merupakan langkah penting dalam membangun sistem rekomendasi, karena kualitas data yang digunakan akan sangat memengaruhi kualitas hasil rekomendasi yang dihasilkan. Proses ini bertujuan untuk membersihkan, menyeleksi, dan mempersiapkan data agar siap digunakan dalam proses modeling.
 Berikut adalah langkah-langkah data preparation yang dilakukan, sesuai urutan dalam notebook:
 1. Import library
-Pada tahap awal, dilakukan import berbagai library yang dibutuhkan seperti ```pandas, numpy, matplotlib, seaborn, sklearn```, dan beberapa modul dari keras serta ```tensorflow```. Library ini digunakan untuk manipulasi data, visualisasi, dan perhitungan similarity. Meskipun library seperti ResNet50 dan ```keras.layers diimpor```, tidak semua digunakan dalam proses content-based filtering, kemungkinan dipersiapkan untuk eksperimen lanjutan. Alasan Menyediakan semua tools yang diperlukan untuk data cleaning, analisis, dan model building.
+
+Pada tahap awal, dilakukan import library penting seperti `pandas` dan `numpy` untuk manipulasi data, serta `matplotlib`, `seaborn`, dan `WordCloud` untuk visualisasi. `TfidfVectorizer` dan `cosine_similarity` dari `sklearn` digunakan untuk menghitung kemiripan dalam sistem rekomendasi berbasis konten. Library ini mendukung proses pembersihan data, analisis, visualisasi, dan pembuatan model rekomendasi.
+
 ```python
 # Import libraries
-import tensorflow as tf
-from tensorflow import keras
-from keras import layers
-from keras.applications.resnet50 import preprocess_input, ResNet50
+# Import libraries basic
 import os
 import pandas as pd
 import numpy as np
 import zipfile
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import ConfusionMatrixDisplay, classification_report
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from IPython.display import display
-
 sns.set_theme(style="ticks")
 pd.set_option('display.max_colwidth', 50)
+
+# visualisi
+from wordcloud import WordCloud
+from IPython.display import display
+
+# prepocesing data
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# evaluasi
+from itertools import combinations
 ```
 2. Data loaading dataset
+   
 Dataset diunduh langsung dari GitHub dalam format CSV yang berisi data lagu Spotify. Setelah itu, data dibaca menggunakan ```pd.read_csv()``` dan ditampilkan beberapa baris awal dengan .```head()``` serta dilihat ukuran datanya dengan ```.shape()```. Alasan memastikan data berhasil dimuat dan memahami struktur serta ukuran data awal yang akan digunakan.
 ```python
 # dwonload data
@@ -218,6 +224,7 @@ data.head()
 print(data.shape)
 ```
 3. Cek informasi dataset
+
 Data diperiksa menggunakan ```.info()``` untuk mengetahui jumlah kolom, tipe data, dan nilai non-null. Selain itu, digunakan juga ```.describe()``` untuk mendapatkan ringkasan statistik seperti mean, min, dan max dari fitur numerik. Alasan untuk mengenali karakteristik data, melihat potensi anomali, serta mengidentifikasi apakah data memiliki tipe atau nilai yang perlu diubah.
 ```python
 # cek info dataset
@@ -226,6 +233,7 @@ df.info()
 df.describe()
 ```
 4. Cek missing value
+
 Diperiksa jumlah missing value pada setiap kolom menggunakan ```.isna().sum()```. Data yang memiliki nilai kosong pada kolom penting seperti track_name, ```track_artist```, dan ```track_album_name``` dihapus menggunakan ```.dropna()```. Alasan data tersebut penting dalam sistem rekomendasi berbasis konten. Jika tidak lengkap, akan mengganggu akurasi perhitungan kemiripan antar lagu.
 ```python
 # cek missing value
@@ -236,26 +244,30 @@ print(df.isna().sum())
 df.dropna(subset=['track_name', 'track_artist', 'track_album_name'], inplace=True)
 print(df.isnull().sum())
 ```
-6. Cek duplikasi data
+5. Cek duplikasi data
+
 Duplikasi dicek menggunakan ```.duplicated().sum()``` untuk mengetahui apakah ada entri lagu yang muncul lebih dari sekali. Alasan duplikasi dapat menyebabkan bias pada sistem rekomendasi karena satu lagu bisa lebih diunggulkan tanpa alasan jelas, sehingga perlu dihindari.
 ```python
 # cek duplikasi data
 print('Duplikasi data ada: ', df.duplicated().sum())
 ```
-7. Pengambilan Sampel Data
+6. Pengambilan Sampel Data
+
 Pengambilan sampel dilakukan menggunakan `.sample(n=1500)` untuk memilih 1500 baris data secara acak dari dataset asli guna efisiensi proses eksplorasi dan pelatihan awal.
 ```python
 # pengambilan sampel data sebanyak 1500 baris
 df_sample = df.sample(n=1500, random_state=42)
 ```
-8. Transformasi Fitur Durasi ke Satuan Menit
+7. Transformasi Fitur Durasi ke Satuan Menit
+
 Fitur `duration_ms` yang semula dalam satuan milidetik diubah menjadi satuan menit agar lebih mudah dibaca dan dianalisis. Transformasi ini dilakukan dengan membagi nilai `duration_ms` dengan 60.000 (karena 1 menit = 60.000 milidetik), lalu disimpan ke kolom baru `duration_min` dalam dataframe `cbf_df`. Transformasi ini membantu dalam visualisasi dan interpretasi durasi lagu, serta dapat digunakan untuk analisis distribusi atau pengelompokan berdasarkan panjang lagu.
 ```python
 # transformasi durasi dari milidetik ke menit
 cbf_df['duration_min'] = cbf_df['duration_ms'] / 60000
 cbf_df[['track_name', 'duration_ms', 'duration_min']].head()
 ```
-9. Pembuatan Fitur-Fitur Baru (Feature Engineering)
+8. Pembuatan Fitur-Fitur Baru (Feature Engineering)
+
 Dilakukan proses rekayasa fitur untuk mengubah fitur numerik menjadi fitur kategorikal yang lebih interpretatif dan mendukung analisis berbasis konten. Beberapa fitur yang dibuat antara lain:
 - duration_label: Kategori durasi lagu (pendek, sedang, panjang) berdasarkan nilai duration_min.
 - energy_level: Kategori tingkat energi lagu (rendah, sedang, tinggi) berdasarkan nilai energy.
@@ -263,7 +275,8 @@ Dilakukan proses rekayasa fitur untuk mengubah fitur numerik menjadi fitur kateg
 Kategorisasi dilakukan menggunakan aturan berbasis threshold sederhana (misalnya menggunakan pd.cut atau logika kondisional), agar fitur numerik menjadi representasi kategorikal yang mudah dikelompokkan dan dibandingkan antar lagu.
 Berikut penjelasan yang kamu minta, dengan gaya yang konsisten seperti bagian-bagian sebelumnya:
 
-10. Pembuatan Fitur Gabungan (`combined_features`) untuk Representasi Teks
+9. Pembuatan Fitur Gabungan (`combined_features`) untuk Representasi Teks
+
 Untuk mendukung pendekatan Content-Based Filtering berbasis teks, beberapa fitur kategorikal yang merepresentasikan karakteristik lagu digabungkan menjadi satu kolom teks. Fitur ini diberi nama `combined_features`, dan menjadi **input utama untuk proses ekstraksi vektor menggunakan TF-IDF**.
 Fitur-fitur yang digabung meliputi:
 
@@ -291,24 +304,30 @@ cbf_df['combined_features'] = (
 ```
 Fitur `combined_features` ini kemudian akan diproses lebih lanjut dengan TF-IDF Vectorizer untuk menghitung kemiripan antar lagu secara otomatis berdasarkan deskripsi kontennya.
 
-11. Seleksi Fitur untuk Content-Based Filtering
+10. Seleksi Fitur untuk Content-Based Filtering
+
 Dilakukan seleksi fitur yang relevan untuk model Content-Based Filtering, yaitu kombinasi fitur numerik dan kategorikal yang mewakili karakteristik lagu. Fitur ini disimpan dalam variabel `cbf_features`, lalu dibuat dataframe `cbf_df` sebagai basis analisis kemiripan.
 ```python
 # seleksi fitur untuk content-based filtering
 cbf_data = cbf_df[['track_id', 'track_name', 'track_artist', 'playlist_genre', 'playlist_subgenre', 'duration_label', 'energy_level', 'danceability_level', 'combined_features']]
 cbf_data.head()
 ```
-12. Ekstraksi Fitur Teks dengan TF-IDF
+11. Ekstraksi Fitur Teks dengan TF-IDF
+
 Dilakukan proses ekstraksi fitur teks dari kolom `combined_features` menggunakan **TF-IDF Vectorizer** untuk merepresentasikan setiap lagu sebagai vektor numerik berbasis konten.
 
 Langkah-langkah utama:
 
+* **Mengatur ulang indeks** agar urut dan konsisten untuk keperluan indexing.
 * **Inisialisasi dan fitting** `TfidfVectorizer` ke kolom `combined_features`.
 * **Transformasi ke matriks TF-IDF** untuk menghitung bobot kata-kata penting.
 * **Konversi ke bentuk matriks dense** dan simpan sebagai dataframe `df_tfidf` dengan `track_name` sebagai indeks.
 
 ```python
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Mengatur ulang indeks agar urut dan konsisten untuk keperluan indexing
+cbf_data = cbf_data.reset_index(drop=True)
 
 # inisialisasi dan fit vectorizer
 vectorizer = TfidfVectorizer(stop_words='english', max_df=0.95, min_df=2)
@@ -322,7 +341,8 @@ df_tfidf = pd.DataFrame(
     index=cbf_data['track_name']
 )
 ```
-13. Perhitungan Kemiripan Lagu dengan Cosine Similarity
+12. Perhitungan Kemiripan Lagu dengan Cosine Similarity
+
 Kemiripan antar lagu dihitung menggunakan **Cosine Similarity** berdasarkan hasil vektorisasi TF-IDF. Fungsi `cosine_similarity` dari `sklearn` digunakan untuk menghasilkan matriks kemiripan antar semua lagu. Matriks `cosine_sim` ini menjadi dasar untuk memberikan rekomendasi lagu berdasarkan kemiripan kontennya.
 ```python
 from sklearn.metrics.pairwise import cosine_similarity
@@ -338,7 +358,7 @@ print(cosine_sim.shape)
 
 
 ## Modeling
-Pada tahap modeling, dibuat sistem rekomendasi berbasis Content-Based Filtering untuk menyelesaikan masalah menemukan lagu-lagu yang mirip dengan lagu yang disukai pengguna. Sistem ini menggunakan fitur  track_id, track_name, track_artist, playlist_genre, playlist_subgenre, duration_label, energy_level dan danceability_level dari lagu-lagu Spotify sebagai representasi konten. Data object diubah ke numerik serta beberapa kolom dilakukan penggabungan untuk mendapatkan representasi data yang bagus. Teknik TF-IDF Vectorization diterapkan untuk mengubah teks genre menjadi vektor numerik, sehingga memungkinkan perhitungan kemiripan antar lagu menggunakan metode cosine similarity. Sistem rekomendasi untuk membantu pengguna menemukan lagu-lagu baru berdasarkan kemiripan dengan lagu yang disukai dengan keyword pilihan id musik, genre dan judul lagu serta keyword kata.
+Pada tahap modeling, dibuat sistem rekomendasi berbasis Content-Based Filtering untuk menyelesaikan masalah menemukan lagu-lagu yang mirip dengan lagu yang disukai pengguna. Sistem ini menggunakan fitur  track_id, track_name, track_artist, playlist_genre, playlist_subgenre, duration_label, energy_level dan danceability_level dari lagu-lagu Spotify sebagai representasi konten. Sistem rekomendasi untuk membantu pengguna menemukan lagu-lagu baru berdasarkan kemiripan dengan lagu yang disukai dengan keyword pilihan id musik, genre dan judul lagu serta keyword kata.
 
 <div align="center">
 <img width="500" alt="Alur Sistem Rekomendasi Bekerja" src="https://github.com/user-attachments/assets/3beb8dd7-0e0c-463f-b662-4b225e9079d5" />
@@ -346,104 +366,125 @@ Pada tahap modeling, dibuat sistem rekomendasi berbasis Content-Based Filtering 
 <strong>Gambar 3.</strong> Alur Sistem Rekomendasi Bekerja
 </div>
 
-Setelah proses vektorisasi, sistem dapat memberikan rekomendasi berupa daftar top-N lagu yang paling mirip berdasarkan nilai kemiripan dengan lagu yang dipilih pengguna. Misalnya, jika pengguna memilih lagu “Love Yourself” dari Justin Bieber, maka sistem akan merekomendasikan lagu-lagu lain dengan genre yang memiliki tingkat kemiripan tertinggi. Sistem ini secara otomatis menghasilkan rekomendasi yang relevan dengan preferensi lagu pengguna tanpa membutuhkan data interaksi pengguna lain. Hasil rekomendasi ini divisualisasikan dalam bentuk tabel yang menampilkan lagu-lagu yang direkomendasikan beserta nama artis, album, dan skor kemiripan (similarity score). Skor kemiripan menunjukkan seberapa dekat karakteristik lagu tersebut dengan lagu referensi, dengan nilai berkisar antara 0 (tidak mirip) sampai 1 (sangat mirip).
+Sistem dapat memberikan rekomendasi berupa daftar top-N lagu yang paling mirip berdasarkan nilai kemiripan dengan lagu yang dipilih pengguna. Misalnya, jika pengguna memilih lagu “Love Yourself” dari Justin Bieber, maka sistem akan merekomendasikan lagu-lagu lain dengan genre yang memiliki tingkat kemiripan tertinggi. Sistem ini secara otomatis menghasilkan rekomendasi yang relevan dengan preferensi lagu pengguna tanpa membutuhkan data interaksi pengguna lain. Hasil rekomendasi ini divisualisasikan dalam bentuk tabel yang menampilkan lagu-lagu yang direkomendasikan beserta nama artis, album, dan skor kemiripan (similarity score). Skor kemiripan menunjukkan seberapa dekat karakteristik lagu tersebut dengan lagu referensi, dengan nilai berkisar antara 0 (tidak mirip) sampai 1 (sangat mirip). Berikut adalah kode program fungsi rekomendasi:
 
-### Hasil Rekomendasi (Input ID Musik): 
+```python
+# Menghasilkan top_n rekomendasi berdasarkan kemiripan konten, beserta skor similarity
+def cbf_product_recommendations(id_product, similarity_data=cosine_sim, items=cbf_data, top_n=10):
+    index = items.index[items.track_id == id_product][0]  # Dapatkan indeks produk
+    sim_scores = list(enumerate(similarity_data[index]))  # Skor similarity dengan semua item
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)  # Urutkan dari paling mirip
+    return sim_scores[1:top_n+1]  # Ambil top_n hasil (kecuali diri sendiri)
+```
+
+### Hasil Rekoemndasi (Input Judul Musik): 
+Pada test ini sistem diuji dengan memakai input keyword judul musik, sistem akan merekomendasikan musik dengan genre yang mirip.
+
 **Kode Program**
-```
-from IPython.display import display
+```python
+# Input nama lagu atau sebagian nama
+track_name_input = "Losers"
 
-# Ambil input nama id track
-product_name_input = "06UXtRLTF6kdMSM3uaVCCU"
+# Cari lagu yang cocok
+matching_tracks = cbf_data[cbf_data['track_name'].str.contains(track_name_input, case=False, na=False)]
 
-# Mencari product_id berdasarkan nama produk
-matching_products = cbf_data[cbf_data['track_id'].str.contains(product_name_input, case=False, na=False, regex=False)]
-
-if matching_products.empty:
-    print("Musik tidak ditemukan.")
+if matching_tracks.empty:
+    print("Lagu tidak ditemukan.")
 else:
-    sample_product_id = matching_products['track_id'].values[0]
-    print(f"Track ID untuk '{product_name_input}': {sample_product_id}")
+    # Ambil lagu pertama yang cocok
+    selected_track_id = matching_tracks.iloc[0]['track_id']
+    selected_track_name = matching_tracks.iloc[0]['track_name']
 
-    # Mendapatkan indeks rekomendasi dari fungsi
-    recommended_indices = cbf_product_recommendations(sample_product_id)
-    print(f"Jumlah rekomendasi: {len(recommended_indices)}")  # Menampilkan jumlah rekomendasi
+    print(f"Lagu ditemukan: {selected_track_name} (track_id: {selected_track_id})")
+    print(f"\nRekomendasi untuk lagu: {selected_track_name}\n")
 
-    # Menampilkan rekomendasi produk berdasarkan indeks
-    recommended_products = cbf_data.iloc[recommended_indices][['track_id', 'track_name', 'playlist_genre', 'playlist_subgenre']]
+    # Ambil hasil rekomendasi dan similarity score
+    recommended = cbf_product_recommendations(selected_track_id, cosine_sim, cbf_data, top_n=10)
 
-    # Menampilkan pengaturan untuk tampilan yang lebih baik
-    pd.set_option('display.max_rows', None)  # Menampilkan semua baris
-    pd.set_option('display.max_columns', None)  # Menampilkan semua kolom
-    pd.set_option('display.width', None)  # Menyesuaikan lebar tampilan
-    pd.set_option('display.max_colwidth', None)  # Menampilkan panjang kolom penuh
+    # Ambil index dan skor
+    recommended_indices = [i[0] for i in recommended]
+    similarity_scores = [i[1] for i in recommended]
 
-    print("\nRecommended Music:")
+    # Ambil data lagu berdasarkan index
+    recommended_tracks = cbf_data.iloc[recommended_indices][['track_id', 'track_name', 'playlist_genre', 'playlist_subgenre']].copy()
+    recommended_tracks['similarity_score'] = similarity_scores
 
-    # Menampilkan tabel dengan menggunakan display untuk format yang rapi di Google Colab
-    display(recommended_products)
+    # Tampilkan hasil
+    display(recommended_tracks.reset_index(drop=True))
 ```
-**Output Berikut ini adalah 🎵 Top-N Rekomendasi Musik Berdasarkan Content-Based Filtering**
+**Output ini adalah 🎶 Daftar judul Lagu**
 
-**Rekomendasi Musik untuk Track ID `06UXtRLTF6kdMSM3uaVCCU`**
+**Rekomendasi Musik untuk Lagu: `Losers`**  
+
+**Track ID:** `3kE5NmMUCPLw5sbWxUQToU`  
+
+**Genre:** Pop
 
 **Jumlah rekomendasi:** 10 lagu
 
 **Daftar Lagu Rekomendasi**
 
+| track\_id              | track\_name     | playlist\_genre | playlist\_subgenre | similarity\_score |
+| ---------------------- | --------------- | --------------- | ------------------ | ----------------- |
+| 4kRT3cCwp0uYEqh4hHvxZS | Jimmy           | pop             | post-teen pop      | 1.000000          |
+| 1mRBJdpIgc3jZH8C3cN2WV | If Only         | pop             | post-teen pop      | 1.000000          |
+| 03teNQu8rWlFnNzF1ULXIq | Starstruck      | pop             | post-teen pop      | 0.957938          |
+| 2fQxE0jVrjNMT9oJAXtSJR | Domino          | pop             | post-teen pop      | 0.957696          |
+| 2NjhV99ncY4A5lSkTHvTtU | Lollipop        | pop             | post-teen pop      | 0.957696          |
+| 5WpNa4vUaruzh0KISY4NkN | Glory           | pop             | post-teen pop      | 0.954205          |
+| 6xg61PHNCLvQClEJrT9p0V | What it Takes   | pop             | post-teen pop      | 0.915788          |
+| 52vS7mJ0a70Z4uRCfl8SjH | What About Love | pop             | post-teen pop      | 0.849303          |
+| 06wxsDleir1dIlqeNv6m2M | You Said        | pop             | post-teen pop      | 0.766997          |
+| 0gJvqi9QyASOCtJu99tytc | Because of You  | pop             | post-teen pop      | 0.753952          |
 
-| No. | Track ID                      | Judul Lagu                                 | Genre | Subgenre   |
-|-----|-------------------------------|--------------------------------------------|--------|-------------|
-| 1   | 1qP7KmHJbzvV8KsFPhW8wY        | Seven Seas Of Rhye - Remastered 2011       | rock   | album rock  |
-| 2   | 62daWSLgfeezIl4MTQFb08        | The Millionaire Waltz - Remastered 2011    | rock   | album rock  |
-| 3   | 6PT7wUJefYPEU1lX1lcLRJ        | Doing Alright - Remastered 2011            | rock   | album rock  |
-| 4   | 26FJA5apYWeehOGnZdUPob        | Body Language - Remastered 2011            | rock   | album rock  |
-| 5   | 2ISPUUp4pzssWuR2Ic09vR        | God Save The Queen - Remastered 2011       | rock   | album rock  |
-| 6   | 489S9D7zr1jSMlNZHLnKKX        | Stone Cold Crazy - Remastered 2011         | rock   | album rock  |
-| 7   | 5txoZyuAmtCfmDjUCEphWm        | Somebody To Love - 2011 Mix                | rock   | hard rock   |
-| 8   | 42qlo3Oi69rOnHMmOKB8uq        | Singularity                                 | rock   | album rock  |
-| 9   | 3x2bXiU0o4WbsPkawXlfDA        | Who Are You                                 | rock   | album rock  |
-| 10  | 1Q2fYlSdwuutWj3QplhY9q        | Riot                                        | rock   | hard rock   |
 
-**Ringkasan Genre/Subgenre**
+**Analisa:**
 
-- **Genre dominan:** Rock
-- **Subgenre terbanyak:** Album Rock (8 lagu)
-- **Subgenre lainnya:** Hard Rock (2 lagu)
+Rekomendasi didominasi oleh lagu-lagu dengan genre **pop** dan subgenre **post-teen pop**, menunjukkan sistem fokus pada kesamaan genre dan gaya musik yang sangat spesifik. Dua lagu teratas memiliki skor similarity sempurna 1.0, menandakan kemiripan identik dengan lagu acuan.
 
-*Catatan: Rekomendasi ini dihasilkan menggunakan pendekatan Content-Based Filtering berdasarkan kemiripan fitur lagu dengan track input.*
+Skor similarity secara bertahap menurun dari sekitar 0.95 hingga 0.75, yang menunjukkan variasi tingkat kemiripan namun masih dalam batas yang cukup dekat. Hal ini mengindikasikan sistem berhasil memberikan rekomendasi lagu yang relevan dan seragam dari segi konten dan gaya musik.
+
+Secara keseluruhan, hasil ini menunjukkan sistem rekomendasi efektif dalam menyajikan lagu-lagu yang sangat mirip berdasarkan fitur audio dan metadata yang digunakan, khususnya dalam genre dan subgenre yang dipilih.
 
 
 ### Hasil Rekoemndasi (Input Genre Musik):
 Berikut ini adalah keyword Genre yang digunakan dalam uji coba ini sesuai dengan genre yang ada di datset rap, edm, pop, r&b, latin dan rock.
 
 **Kode Program**
-```
-from IPython.display import display
-
+```python
 # Input keyword genre
 keyword_genre = "latin"
 
-# Jumlah maksimum lagu yang ingin ditampilkan (otomatis sesuai top_n dari sistem rekomendasi)
+# Jumlah maksimum lagu yang ingin ditampilkan
 top_n = 10
 
-# Filter lagu-lagu yang genre-nya mengandung keyword genre (case insensitive)
+# Filter lagu-lagu yang genre-nya mengandung keyword
 filtered_songs = cbf_data[cbf_data['playlist_genre'].str.contains(keyword_genre, case=False, na=False)]
 
 if filtered_songs.empty:
     print(f"Tidak ditemukan lagu dengan genre '{keyword_genre}'.")
 else:
     print(f"Lagu dengan genre '{keyword_genre}'")
-    print(f"Jumlah rekomendasi: {min(top_n, len(filtered_songs))}")
 
-    # Pengaturan tampilan agar lebih rapi
-    pd.set_option('display.max_rows', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_colwidth', None)
+    # Ambil satu lagu acuan (misalnya lagu pertama)
+    reference_track_id = filtered_songs.iloc[0]['track_id']
+    reference_track_name = filtered_songs.iloc[0]['track_name']
 
-    # Tampilkan hingga top_n lagu (jika tersedia)
-    display(filtered_songs[['track_id', 'track_name', 'playlist_genre', 'playlist_subgenre']].head(top_n))
+    print(f"Lagu acuan: {reference_track_name} (track_id: {reference_track_id})")
+
+    # Dapatkan rekomendasi berdasarkan lagu acuan
+    recommended = cbf_product_recommendations(reference_track_id, cosine_sim, cbf_data, top_n=top_n)
+
+    # Ambil index dan skor similarity
+    recommended_indices = [i[0] for i in recommended]
+    similarity_scores = [i[1] for i in recommended]
+
+    # Ambil data lagu dan tambahkan skor similarity
+    recommended_tracks = cbf_data.iloc[recommended_indices][['track_id', 'track_name', 'playlist_genre', 'playlist_subgenre']].copy()
+    recommended_tracks['similarity_score'] = [round(score, 3) for score in similarity_scores]
+
+    # Tampilkan hasil
+    display(recommended_tracks.reset_index(drop=True))
 ```
 **Output ini adalah 🎶 Daftar Lagu dengan Genre Latin**
 
@@ -453,104 +494,25 @@ else:
 
 **Daftar Lagu Rekomendasi**
 
-| No. | Track ID                      | Judul Lagu                            | Genre | Subgenre       |
-|-----|-------------------------------|----------------------------------------|--------|----------------|
-| 1   | 4xvTPuwHaXoDM3p0QcY7bH        | Música                                 | latin | latin pop      |
-| 2   | 34v7cD6VR3fVYguedQ1wuh        | Tropical Forest                         | latin | tropical       |
-| 3   | 53rhwRKKrsWaT6tuSzymdY        | mEnorme                                 | latin | tropical       |
-| 4   | 7LRJmZ6G5qHQEG2CGeTCji        | We Can (feat. Tory Lanez)              | latin | latin hip hop  |
-| 5   | 7MRU4vOkywuhZ9kbFiPuiu        | Si Supieras                             | latin | latin hip hop  |
-| 6   | 35FIDQv0u26DSknDahmcdz        | With You                                | latin | tropical       |
-| 7   | 3ALLv1BQxYFlJ8XQOQtgW1        | DIEZ MINUTOS (feat. Mario Bautista)    | latin | latin pop      |
-| 8   | 3uYzfyifC7J1j1IEjN1xz6        | This Love - Acoustic                    | latin | latin pop      |
-| 9   | 3BffVF4K7OelPuo46KUqhe        | Ella Me Levanto                         | latin | reggaeton      |
-| 10  | 7yws3pF3FFguwT2Psi6c15        | Do You Remember                         | latin | latin hip hop  |
-
-**Ringkasan Genre/Subgenre**
-
-- **Genre dominan:** Latin
-- **Subgenre terbanyak:**  
-  - *Latin Pop*: 3 lagu  
-  - *Tropical*: 3 lagu  
-  - *Latin Hip Hop*: 3 lagu  
-  - *Reggaeton*: 1 lagu
-    
-*Catatan: Rekomendasi ini dihasilkan menggunakan pendekatan Content-Based Filtering berdasarkan lagu-lagu yang memiliki genre `latin`.*
+| track\_id              | track\_name                      | playlist\_genre | playlist\_subgenre | similarity\_score |
+| ---------------------- | -------------------------------- | --------------- | ------------------ | ----------------- |
+| 4xvTPuwHaXoDM3p0QcY7bH | Música                           | latin           | reggaeton          | 0.904             |
+| 2RNvcU4iA11QdWnfGbTnzr | Legendary (DJ Kantik Remix)      | latin           | latin hip hop      | 0.527             |
+| 0WZqP2WahJbKURqUK3fBPk | Eternamente Bella                | latin           | latin pop          | 0.510             |
+| 23YEpFgAVvr0w3cDm7EQ1Q | Prrrum                           | latin           | latin pop          | 0.510             |
+| 0KzhyaVtr2v4J9GVdMgCk0 | Gangsta                          | latin           | latin pop          | 0.479             |
+| 5djZm1zFGcJUSUqbBjrAZH | O Saki Saki (From "Batla House") | latin           | latin pop          | 0.459             |
+| 3sFX86i3Qebco0KhrUVCoL | FWB                              | latin           | latin pop          | 0.447             |
+| 3qSLaqWAsUdpf830MjlRTm | Yo Sé                            | latin           | latin hip hop      | 0.433             |
+| 4gWAcvkVLzqnzFOcrYBut7 | Choosy (feat. Jeremih & Davido)  | latin           | latin pop          | 0.427             |
+| 7sBDv4kLo2GVucy5VGh7GX | A punto (feat. Delfina Campos)   | latin           | latin pop          | 0.425             |
 
 
-### Hasil Rekoemndasi (Input Judul Musik): 
-Pada test ini sistem diuji dengan memakai input keyword musik misal ( what, who, and, you dst) selain dengan keyword itu pada test ini juga bisa melakukan rekomendasi berdasar judul lagu yang dimasukan.
-**Kode Program**
-```
-from IPython.display import display
+**Analisa Singkat dengan Konteks Input Genre:**
 
-def get_track_id_by_name(name, data):
-    matches = data[data['track_name'].str.contains(name, case=False, na=False)]
-    return matches
+Sistem rekomendasi ini bekerja dengan menggunakan input pencarian berdasarkan **genre**, sehingga hasil rekomendasi didominasi oleh lagu-lagu dalam genre **latin** yang sama dengan lagu acuan. Hal ini terlihat dari konsistensi genre dan subgenre pada daftar rekomendasi, seperti latin pop dan latin hip hop.
 
-# Masukan nama lagu disini atau keyword
-# contoh nama lagu : I Miss You
-# contoh keyword : what/word/who dst
-track_name_input = "what"
-
-matching_tracks = get_track_id_by_name(track_name_input, cbf_data)
-
-if matching_tracks.empty:
-    print("Lagu tidak ditemukan.")
-else:
-    # Ambil lagu pertama yang cocok langsung
-    selected_track_id = matching_tracks.iloc[0]['track_id']
-    selected_track_name = matching_tracks.iloc[0]['track_name']
-
-    print(f"Lagu ditemukan: {selected_track_name} (track_id: {selected_track_id})")
-    print(f"\nRekomendasi untuk lagu: {selected_track_name}")
-
-    top_n = 10
-    recommended_indices = cbf_product_recommendations(
-        id_product=selected_track_id, similarity_data=cosine_sim, items=cbf_data, top_n=top_n
-    )
-
-    print(f"Jumlah rekomendasi: {len(recommended_indices)}\n")
-
-    recommended_tracks = cbf_data.iloc[recommended_indices][['track_id', 'track_name', 'playlist_genre', 'playlist_subgenre']]
-
-    display(recommended_tracks.reset_index(drop=True))
-```
-**Output ini adalah 🎶 Daftar Lagu dengan Genre Latin**
-
-**Rekomendasi Musik untuk Lagu: `Look What You Made Me Do`**  
-
-**Track ID:** `1P17dC1amhFzptugyAO7Il`  
-
-**Genre:** Pop
-
-**Jumlah rekomendasi:** 10 lagu
-
-**Daftar Lagu Rekomendasi**
-
-| No. | Track ID                      | Judul Lagu          | Genre | Subgenre        |
-|-----|-------------------------------|----------------------|--------|-----------------|
-| 1   | 6xg61PHNCLvQClEJrT9p0V        | What it Takes        | pop    | post-teen pop   |
-| 2   | 2fQxE0jVrjNMT9oJAXtSJR        | Domino               | pop    | post-teen pop   |
-| 3   | 2NjhV99ncY4A5lSkTHvTtU        | Lollipop             | pop    | post-teen pop   |
-| 4   | 03teNQu8rWlFnNzF1ULXIq        | Starstruck           | pop    | post-teen pop   |
-| 5   | 3kE5NmMUCPLw5sbWxUQToU        | Losers               | pop    | post-teen pop   |
-| 6   | 4kRT3cCwp0uYEqh4hHvxZS        | Jimmy                | pop    | post-teen pop   |
-| 7   | 1mRBJdpIgc3jZH8C3cN2WV        | If Only              | pop    | post-teen pop   |
-| 8   | 5WpNa4vUaruzh0KISY4NkN        | Glory                | pop    | post-teen pop   |
-| 9   | 52vS7mJ0a70Z4uRCfl8SjH        | What About Love      | pop    | post-teen pop   |
-| 10  | 09IStsImFySgyp0pIQdqAc        | The Middle           | pop    | post-teen pop   |
-
-**Ringkasan Genre/Subgenre**
-
-- **Genre utama:** Pop  
-- **Subgenre dominan:** Post-Teen Pop (10 lagu)
-
-*Catatan: Rekomendasi ini dibuat menggunakan Content-Based Filtering berdasarkan lagu `Look What You Made Me Do` dengan karakteristik genre/subgenre yang mirip.*
-
-
-Kelebihan pendekatan Content-Based Filtering ini adalah kemampuannya untuk memberikan rekomendasi yang sangat personal karena langsung menganalisis fitur konten lagu. Sistem tidak bergantung pada data interaksi pengguna lain sehingga efektif untuk skenario dengan data pengguna terbatas.
-Kekurangannya adalah sistem cenderung merekomendasikan lagu-lagu yang mirip dengan apa yang sudah diketahui pengguna dan kurang mampu menawarkan rekomendasi lagu yang benar-benar baru atau berbeda (masalah eksplorasi). Secara keseluruhan, pendekatan ini sudah efektif untuk menghasilkan rekomendasi yang relevan dan dapat menjadi fondasi untuk pengembangan sistem rekomendasi yang lebih kompleks di masa depan.
+Pendekatan ini efektif untuk memberikan rekomendasi yang relevan secara tematik, menjaga kesamaan gaya musik sesuai preferensi pengguna yang memilih genre tertentu sebagai input. Skor similarity yang berbeda-beda mencerminkan tingkat kedekatan lagu-lagu tersebut dengan lagu input dalam konteks fitur audio dan metadata yang digunakan.
 
 
 ----------------------------------------------------
@@ -558,105 +520,8 @@ Kekurangannya adalah sistem cenderung merekomendasikan lagu-lagu yang mirip deng
 
 ## Evaluation
 
-### A. Evaluasi Hasil Rekomendasi Musik Berdasarkan Track ID
-**Deskripsi Dataset dan Evaluasi**
 
-Dataset yang digunakan berisi total 1500 lagu dengan berbagai genre dan subkategori. Pada evaluasi ini, dilakukan pengujian dengan memasukkan input lagu dengan Track ID 06UXtRLTF6kdMSM3uaVCCU untuk menghasilkan rekomendasi sebanyak 10 lagu.
+## Kesimpulan
 
-**Hasil Rekomendasi**
-
-Dari hasil rekomendasi yang diberikan, seluruh lagu yang direkomendasikan (10 lagu) termasuk dalam genre rock, dengan subkategori mayoritas album rock dan sebagian hard rock.
-
-| Metrik                                 | Nilai                                     | Keterangan                                                         |
-| -------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
-| Jumlah rekomendasi                     | 10                                        | Total lagu yang direkomendasikan                                   |
-| Lagu rekomendasi genre "rock"          | 10                                        | Semua lagu rekomendasi bergenre rock                               |
-| Lagu rekomendasi subgenre "album rock" | 7                                         | 7 lagu subgenre album rock                                         |
-| Lagu rekomendasi subgenre "hard rock"  | 3                                         | 3 lagu subgenre hard rock                                          |
-| Presisi (Precision)                    | 10 / 10 = 1.00                            | Semua rekomendasi sesuai dengan genre input                        |
-| Recall                                 | 10 / 240 = 0.0417 (4.17%)                 | Persentase lagu rock yang berhasil direkomendasikan                |
-| Coverage                               | (10 / 240) × 100 = 4.17%                  | Persentase cakupan lagu dalam genre rock dari total genre rock     |
-| Diversity                              | 2 subgenre dari total 24 subgenre ≈ 8.33% | Variasi subgenre yang muncul dalam rekomendasi dari total subgenre |
-
-**Interpretasi Hasil**
-
-- Presisi 100% menunjukkan semua lagu yang direkomendasikan benar-benar sesuai genre input (rock). Sistem sangat fokus dan akurat dalam genre yang sama.
-
-- Recall 4.17% relatif rendah, karena sistem diseting hanya merekomendasikan top 10 lagu dari total 240 lagu rock yang ada di dataset. Ini wajar karena rekomendasi hanya top 10.
-
-- Coverage 4.17% sama dengan recall dalam konteks genre ini, menandakan seberapa luas sistem merekomendasikan lagu dalam genre rock.
-
-- Diversity 8.33% menunjukkan variasi subgenre dalam rekomendasi, yang masih terbatas karena hanya ada 2 subgenre dari total 24 subgenre yang ada. Artinya, rekomendasi cukup spesifik dan belum menawarkan banyak variasi.
-
-**Kesimpulan**
-
-Metode Content Based Filtering memberikan hasil rekomendasi dengan presisi tinggi (100%), sangat relevan dengan genre input. Namun, recall dan coverage rendah menandakan sistem hanya merekomendasikan sebagian kecil lagu dalam genre tersebut, sesuai dengan jumlah rekomendasi yang dibatasi yaitu (top 10). Variasi subgenre dalam rekomendasi masih terbatas, sehingga sistem perlu ditingkatkan untuk meningkatkan diversity agar rekomendasi lebih beragam.
-
-### B. Evaluasi Hasil Rekomendasi Musik Berdasarkan Track ID
-**Deskripsi Dataset dan Evaluasi**
-
-Dataset yang digunakan berisi total 1500 lagu dengan berbagai genre dan subkategori. Pada evaluasi ini, dilakukan pengujian dengan memasukkan input lagu dengan genre latin untuk menghasilkan rekomendasi sebanyak 10 lagu.
-
-**Hasil Rekomendasi**
-
-Dari hasil rekomendasi yang diberikan, seluruh lagu yang direkomendasikan (10 lagu) termasuk dalam genre latin, dengan subkategori yang beragam yaitu latin pop, tropical, latin hip hop, dan reggaeton.
-
-| Metrik                                    | Nilai                                      | Keterangan                                                         |
-| ----------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| Jumlah rekomendasi                        | 10                                         | Total lagu yang direkomendasikan                                   |
-| Lagu rekomendasi genre "latin"            | 10                                         | Semua lagu rekomendasi bergenre latin                              |
-| Lagu rekomendasi subgenre "latin pop"     | 3                                          | 3 lagu subgenre latin pop                                          |
-| Lagu rekomendasi subgenre "tropical"      | 3                                          | 3 lagu subgenre tropical                                           |
-| Lagu rekomendasi subgenre "latin hip hop" | 3                                          | 3 lagu subgenre latin hip hop                                      |
-| Lagu rekomendasi subgenre "reggaeton"     | 1                                          | 1 lagu subgenre reggaeton                                          |
-| Presisi (Precision)                       | 10 / 10 = 1.00                             | Semua rekomendasi sesuai dengan genre input                        |
-| Recall                                    | 10 / 220 = 0.0455 (4.55%)                  | Persentase lagu latin yang berhasil direkomendasikan               |
-| Coverage                                  | (10 / 220) × 100 = 4.55%                   | Persentase cakupan lagu dalam genre latin dari total genre latin   |
-| Diversity                                 | 4 subgenre dari total 24 subgenre ≈ 16.67% | Variasi subgenre yang muncul dalam rekomendasi dari total subgenre |
-
-**Interpretasi Hasil**
-
-- Presisi 100% menunjukkan semua lagu yang direkomendasikan benar-benar sesuai genre input (latin). Sistem sangat akurat dalam memilih lagu dalam genre yang sama.
-
-- Recall 4.55% relatif rendah, karena sistem hanya merekomendasikan top 10 lagu dari total 220 lagu latin yang ada di dataset. Ini sesuai dengan batasan jumlah rekomendasi.
-
-- Coverage 4.55% sama dengan recall, menunjukkan cakupan rekomendasi dalam genre latin masih kecil.
-
-- Diversity 16.67% menunjukkan variasi subgenre dalam rekomendasi lebih baik dibanding contoh genre rock sebelumnya, dengan 4 subgenre berbeda dari total 24 subgenre yang ada, menunjukkan rekomendasi lebih bervariasi.
-
-**Kesimpulan**
-
-Metode Content Based Filtering berhasil memberikan rekomendasi dengan presisi tinggi (100%) pada genre latin. Recall dan coverage masih rendah karena jumlah rekomendasi terbatas. Namun, tingkat diversity yang lebih tinggi menunjukkan sistem mampu menawarkan variasi subgenre yang lebih beragam, sehingga memberikan rekomendasi yang tidak hanya fokus pada satu atau dua subgenre saja.
-
-### C. Evaluasi Hasil Rekomendasi Musik Berdasarkan Judul Lagu
-**Deskripsi Dataset dan Evaluasi**
-
-Dataset yang digunakan berisi total 1500 lagu dengan berbagai genre dan subkategori. Pada evaluasi ini, dilakukan pengujian dengan memasukkan input lagu Look What You Made Me Do (track_id: 1P17dC1amhFzptugyAO7Il) untuk menghasilkan rekomendasi sebanyak 10 lagu.
-
-**Hasil Rekomendasi**
-
-Dari hasil rekomendasi yang diberikan, seluruh lagu yang direkomendasikan (10 lagu) termasuk dalam genre pop, dengan seluruh subkategori yang sama yaitu post-teen pop.
-
-| Metrik                                    | Nilai                                     | Keterangan                                                   |
-| ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
-| Jumlah rekomendasi                        | 10                                        | Total lagu yang direkomendasikan                             |
-| Lagu rekomendasi genre "pop"              | 10                                        | Semua lagu rekomendasi bergenre pop                          |
-| Lagu rekomendasi subgenre "post-teen pop" | 10                                        | Semua lagu subgenre post-teen pop                            |
-| Presisi (Precision)                       | 10 / 10 = 1.00                            | Semua rekomendasi sesuai dengan genre input                  |
-| Recall                                    | 10 / 230 = 0.0435 (4.35%)                 | Persentase lagu pop yang berhasil direkomendasikan           |
-| Coverage                                  | (10 / 230) × 100 = 4.35%                  | Persentase cakupan lagu dalam genre pop dari total genre pop |
-| Diversity                                 | 1 subgenre dari total 24 subgenre ≈ 4.17% | Variasi subgenre dalam rekomendasi dari total subgenre       |
-
-**Interpretasi Hasil**
-
-- Presisi 100% menunjukkan bahwa sistem hanya merekomendasikan lagu yang sangat relevan dengan genre input (pop), menunjukkan tingkat akurasi tinggi.
-
-- Recall 4.35% relatif rendah karena sistem dibatasi hanya merekomendasikan 10 lagu dari total 230 lagu dalam genre pop.
-
-- Coverage setara dengan recall karena dihitung dalam konteks genre tertentu, menandakan sistem hanya mencakup sebagian kecil dari semua lagu pop yang tersedia.
-
-- Diversity rendah (4.17%) karena hanya ada satu subgenre yang muncul, yaitu post-teen pop. Ini menunjukkan sistem terlalu fokus pada satu jenis subgenre dan kurang memberikan variasi dalam rekomendasi.
-
-**Kesimpulan**
-
-Metode Content Based Filtering menghasilkan rekomendasi dengan presisi tinggi (100%) untuk lagu bergenre pop, khususnya subgenre post-teen pop. Namun, rendahnya nilai recall, coverage, dan diversity menunjukkan bahwa sistem masih dapat ditingkatkan dalam hal variasi dan cakupan rekomendasi, agar pengguna dapat menerima lebih banyak opsi yang tetap relevan namun lebih beragam dalam subgenre.
+1. Kelebihan pendekatan Content-Based Filtering ini adalah kemampuannya untuk memberikan rekomendasi yang sangat personal karena langsung menganalisis fitur konten lagu. Sistem tidak bergantung pada data interaksi pengguna lain sehingga efektif untuk skenario dengan data pengguna terbatas.
+Kekurangannya adalah sistem cenderung merekomendasikan lagu-lagu yang mirip dengan apa yang sudah diketahui pengguna dan kurang mampu menawarkan rekomendasi lagu yang benar-benar baru atau berbeda (masalah eksplorasi). Secara keseluruhan, pendekatan ini sudah efektif untuk menghasilkan rekomendasi yang relevan dan dapat menjadi fondasi untuk pengembangan sistem rekomendasi yang lebih kompleks di masa depan.
